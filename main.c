@@ -14,25 +14,16 @@ typedef struct{
     int valor;
 }Item;
 
-//Estructura para las direcciones posibles
-typedef struct{
-    Escenarios * arriba;
-    Escenarios * abajo;
-    Escenarios * izquierda;
-    Escenarios * derecha;
-}Direccion;
-
 //Estructura para cada escenario(nivel)
 struct Escenarios{
     char id[100];
     char nombre[50];
-    char descripcion[500];
-    List * items_disp;
-    Direccion  dir_posibles;
-    char id_arriba[3];
-    char id_abajo[3];
-    char id_izquierda[3];
-    char id_derecha[3];
+    char leyenda[500];
+    int id_arriba;
+    int id_abajo;
+    int id_izquierda;
+    int id_derecha;
+    List *Enemigos;
 };
 
 //Estructura para el jugador
@@ -54,7 +45,7 @@ typedef struct{
     int defensa;
     int ataque;
     int exp_dada;
-    Escenarios *actual;
+    Item *item;
 }Enemigo;
 
 int main(){
