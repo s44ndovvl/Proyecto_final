@@ -23,6 +23,10 @@ struct Escenarios{
     char id_abajo;
     char id_izquierda;
     char id_derecha;
+    Escenarios *arriba;
+    Escenarios *abajo;
+    Escenarios *izquierda;
+    Escenarios *derecha;
     List *Enemigos;
 };
 
@@ -53,7 +57,7 @@ int main(){
     return 0;
 }
 
-/*void leer_escenarios(HashMap * juego){
+void leer_escenarios(HashMap * juego){
     FILE *archivo = fopen("data/mapa.csv", "r");
     if (archivo == NULL){
         perror("Error al abrir el archivo");
@@ -92,38 +96,14 @@ int main(){
     fclose(archivo);
 
     // Segunda pasada: establecer los punteros de direcciÃ³n entre escenarios
-    /*List * claves = list_create();
-    Pair * par = firstMap(juego);
-    while (par != NULL) {
-        list_pushBack(claves, par->key);
-        par = nextMap(juego);
+    for (Pair *pp = firstMap(juego); pp; pp = nextMap(juego)) // Recorre todos los escenarios
+    {
+        Escenarios *e = (Escenarios*)pp->value; // Obtiene el escenario actual
+
+        if(atoi(e->id_abajo) != 0)e->abajo = (Escenarios*)searchMap(juego, e->id_abajo)->value; // Conecta el escenario abajo
+        if(atoi(e->id_arriba) != 0)e->arriba = (Escenarios*)searchMap(juego, e->id_arriba)->value; // Conecta el escenario arriba
+        if(atoi(e->id_izquierda) != 0)e->izquierda = (Escenarios*)searchMap(juego, e->id_izquierda)->value; // Conecta el escenario izquierda
+        if(atoi(e->id_derecha) != 0)e->derecha = (Escenarios*)searchMap(juego, e->id_derecha)->value; // Conecta el escenario derecha
+
     }
-
-    // Ahora recorremos esa lista para validar enlaces sin afectar el iterador de juego
-    for (char * clave = list_first(claves); clave != NULL; clave = list_next(claves)) {
-        Pair * pEscenario = searchMap(juego, clave);
-        if (!pEscenario) continue;
-
-        Escenarios * escenario = (Escenarios*)pEscenario->value;
-
-        if (strcmp(escenario->id_arriba, "-1") != 0){
-            Pair * aux = searchMap(juego, escenario->id_arriba);
-            if (aux != NULL) escenario->dir_posibles.arriba = (Escenarios*)aux->value;
-        }
-        if (strcmp(escenario->id_abajo, "-1") != 0){
-            Pair * aux = searchMap(juego, escenario->id_abajo);
-            if (aux != NULL) escenario->dir_posibles.abajo = (Escenarios*)aux->value;
-        }
-        if (strcmp(escenario->id_izquierda, "-1") != 0){
-            Pair * aux = searchMap(juego, escenario->id_izquierda);
-            if (aux != NULL) escenario->dir_posibles.izquierda = (Escenarios*)aux->value;
-        }
-        if (strcmp(escenario->id_derecha, "-1") != 0){
-            Pair * aux = searchMap(juego, escenario->id_derecha);
-            if (aux != NULL) escenario->dir_posibles.derecha = (Escenarios*)aux->value;
-        }
-    }
-
-    list_clean(claves);
-    free(claves);    
-}*/
+}
