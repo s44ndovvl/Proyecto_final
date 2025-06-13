@@ -54,7 +54,7 @@ int main(){
 }
 
 /*void leer_escenarios(HashMap * juego){
-    FILE *archivo = fopen("data/graphquest.csv", "r");
+    FILE *archivo = fopen("data/mapa.csv", "r");
     if (archivo == NULL){
         perror("Error al abrir el archivo");
         return;
