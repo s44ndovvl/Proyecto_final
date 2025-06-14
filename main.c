@@ -7,6 +7,21 @@
 
 typedef struct Escenarios Escenarios;
 
+typedef struct{
+    char tipo[50];
+    char nombre[50];
+    int defensa;
+    int durabilidad;
+    char bufo[50];
+    int valor;
+    //int nivel_requerido;
+}Armadura;
+
+typedef struct{
+    char nombre[50];
+    int ataque;
+    int durabilidad;
+}Arma;
 //Estructura para cada Item
 typedef struct{
     char nombre[50];
@@ -53,8 +68,20 @@ typedef struct{
     Item *item;
 }Enemigo;
 
+void leer_escenarios(HashMap * );
+void mostrarMap(HashMap * );
+
 int main(){
     printf("hello world");
+
+    HashMap *juego = createMap(100); // Crea un HashMap para almacenar los escenarios
+    if (juego == NULL) {
+        fprintf(stderr, "Error al crear el HashMap\n");
+        return 1;
+    }
+    leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
+    mostrarMap(juego); // Muestra el contenido del HashMap
+
     return 0;
 }
 
@@ -103,5 +130,13 @@ void leer_escenarios(HashMap * juego){
         if(atoi(e->id_izquierda) != 0)e->izquierda = (Escenarios*)searchMap(juego, e->id_izquierda)->value; // Conecta el escenario izquierda
         if(atoi(e->id_derecha) != 0)e->derecha = (Escenarios*)searchMap(juego, e->id_derecha)->value; // Conecta el escenario derecha
 
+    }
+}
+
+void mostrarMap(HashMap * juego){
+    for (Pair *pp = firstMap(juego); pp; pp = nextMap(juego)) {
+        Escenarios *e = (Escenarios*)pp->value;
+        printf("ID: %s, Nombre: %s, Leyenda: %s, Dificultad: %s\n", e->id, e->nombre, e->leyenda, e->dificultad);
+        printf("Arriba: %s, Abajo: %s, Izquierda: %s, Derecha: %s\n", e->id_arriba, e->id_abajo, e->id_izquierda, e->id_derecha);
     }
 }
