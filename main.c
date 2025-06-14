@@ -16,13 +16,13 @@ typedef struct{
 
 //Estructura para cada escenario(nivel)
 struct Escenarios{
-    char id;
+    char id[3];
     char nombre[50];
     char leyenda[500];
-    char id_arriba;
-    char id_abajo;
-    char id_izquierda;
-    char id_derecha;
+    char id_arriba[3];
+    char id_abajo[3];
+    char id_izquierda[3];
+    char id_derecha[3];
     Escenarios *arriba;
     Escenarios *abajo;
     Escenarios *izquierda;
@@ -70,20 +70,23 @@ void leer_escenarios(HashMap * juego){
     while ((campos = leer_linea_csv(archivo, ',')) != NULL){
         Escenarios * escenario = (Escenarios*)malloc(sizeof(Escenarios));
         //Inicializa los punteros de direccion a NULL para evitar punteros basura
-        escenario->id_arriba = campos[7];
-        escenario->id_abajo = campos[8];
-        escenario->id_izquierda = campos[5];
-        escenario->id_derecha = campos[6];
+        escenario->arriba = NULL;
+        escenario->abajo = NULL;
+        escenario->izquierda = NULL;
+        escenario->derecha = NULL;
+
+        strcpy(escenario->id_arriba, campos[7]);
+        strcpy(escenario->id_abajo, campos[8]);
+        strcpy(escenario->id_izquierda, campos[5]);
+        strcpy(escenario->id_derecha, campos[6]);
         
         //Copia los datos del CSV a la estructura del escenario
-        strncpy(escenario->id, campos[0], sizeof(escenario->id));
-        strncpy(escenario->nombre, campos[1], sizeof(escenario->nombre));
-        strncpy(escenario->leyenda, campos[2], sizeof(escenario->leyenda));
+        strcpy(escenario->id, campos[0]);
+        strcpy(escenario->nombre, campos[1]);
+        strcpy(escenario->leyenda, campos[2]);
         
         List * items = split_string(campos[3], ";");
         List * lista_items = list_create();
-
-        
 
         strcpy(escenario->id_arriba, campos[4]);
         strcpy(escenario->id_abajo, campos[5]);
