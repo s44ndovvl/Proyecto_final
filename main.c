@@ -28,6 +28,7 @@ struct Escenarios{
     Escenarios *izquierda;
     Escenarios *derecha;
     List *Enemigos;
+    char dificultad[8];
 };
 
 //Estructura para el jugador
@@ -74,24 +75,18 @@ void leer_escenarios(HashMap * juego){
         escenario->abajo = NULL;
         escenario->izquierda = NULL;
         escenario->derecha = NULL;
-
-        strcpy(escenario->id_arriba, campos[7]);
-        strcpy(escenario->id_abajo, campos[8]);
-        strcpy(escenario->id_izquierda, campos[5]);
-        strcpy(escenario->id_derecha, campos[6]);
         
         //Copia los datos del CSV a la estructura del escenario
         strcpy(escenario->id, campos[0]);
         strcpy(escenario->nombre, campos[1]);
         strcpy(escenario->leyenda, campos[2]);
-        
-        List * items = split_string(campos[3], ";");
-        List * lista_items = list_create();
 
-        strcpy(escenario->id_arriba, campos[4]);
-        strcpy(escenario->id_abajo, campos[5]);
-        strcpy(escenario->id_izquierda, campos[6]);
-        strcpy(escenario->id_derecha, campos[7]);
+        strcpy(escenario->id_arriba, campos[3]);
+        strcpy(escenario->id_abajo, campos[4]);
+        strcpy(escenario->id_izquierda, campos[5]);
+        strcpy(escenario->id_derecha, campos[6]);
+
+        strcpy(escenario->dificultad, campos[7]);
 
         insertMap(juego, escenario->id, escenario);
 
