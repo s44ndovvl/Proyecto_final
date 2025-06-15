@@ -31,9 +31,13 @@ typedef struct{
 }Pocion;
 
 typedef struct{
-    Arma *armas;
-    Armadura *armaduras;
-    Pocion *pocion;
+    Arma armas;
+    Armadura casco;
+    Armadura guantes;
+    Armadura pechera;
+    Armadura pantalones;
+    Armadura botas;
+    List *pocion;
 }Inventario;
 
 //Estructura para cada escenario(nivel)
@@ -63,7 +67,7 @@ typedef struct{
     int experiencia;
     int nivel;
     Escenarios *actual;
-    List *inventario;
+    Inventario inventario;
 }Jugador;
 
 typedef struct{
@@ -73,7 +77,7 @@ typedef struct{
     int defensa;
     int ataque;
     int exp_dada;
-    Inventario *item;
+    Inventario item;
 }Enemigo;
 
 void leer_escenarios(HashMap * );
@@ -156,14 +160,14 @@ void leer_mobs(HashMap * mobs){
         strcpy(enemigo->dificultad, campos[1]);
         strcpy(enemigo->vida, campos[2]);
 
-        strcpy(escenario->id_arriba, campos[3]);
-        strcpy(escenario->id_abajo, campos[4]);
-        strcpy(escenario->id_izquierda, campos[5]);
-        strcpy(escenario->id_derecha, campos[6]);
+        //strcpy(escenario->id_arriba, campos[3]);
+        //strcpy(escenario->id_abajo, campos[4]);
+        //strcpy(escenario->id_izquierda, campos[5]);
+        //strcpy(escenario->id_derecha, campos[6]);
 
-        strcpy(escenario->dificultad, campos[7]);
+        //strcpy(escenario->dificultad, campos[7]);
 
-        insertMap(mobs, escenario->id, escenario);
+        //insertMap(mobs, escenario->id, escenario);
 
     }
     fclose(archivo);
