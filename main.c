@@ -83,15 +83,19 @@ typedef struct{
 void leer_escenarios(HashMap * );
 void mostrarMap(HashMap * );
 void leer_mobs(HashMap * );
+void mostrar_mobs(HashMap * );
 
 int main(){
     HashMap *juego = createMap(100); // Crea un HashMap para almacenar los escenarios
+    HashMap *mobs = createMap(100); // Crea un HashMap para almacenar los monstruos
     if (juego == NULL) {
         fprintf(stderr, "Error al crear el HashMap\n");
         return 1;
     }
     leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
-    mostrarMap(juego); // Muestra el contenido del HashMap
+    mostrarMap(juego);
+    leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
+    mostrar_mobs(mobs); // Muestra el contenido del HashMap
 
     return 0;
 }
@@ -144,118 +148,157 @@ void leer_escenarios(HashMap * juego){
     }
 }
 
-void leer_mobs(HashMap * mobs){
+void leer_mobs(HashMap *mobs) {
     FILE *archivo = fopen("data/enemigos.csv", "r");
-    if (archivo == NULL){
-        perror("Error al abrir el archivo");
+    if (!archivo) {
+        perror("Error al abrir data/enemigos.csv");
         return;
     }
 
-    char **campos;
-    campos = leer_linea_csv(archivo, ',');
+    // 1) Saltar cabecera
+    char **campos = leer_linea_csv(archivo, ',');
+    (void)campos;  // ignoramos el resultado
 
-    while ((campos = leer_linea_csv(archivo, ',')) != NULL){
-        Enemigo * enemigo = (Enemigo*)malloc(sizeof(Enemigo));
-        if (enemigo == NULL) {
-            fprintf(stderr, "Error al asignar memoria para enemigo\n");
-            fclose(archivo);
-            return;
-        }
-        strcpy(enemigo->nombre, campos[0]);
-        strcpy(enemigo->dificultad, campos[1]);
-        enemigo->vida, atoi(campos[2]);
-        enemigo->ataque   = atoi(campos[3]);
-        enemigo->defensa  = atoi(campos[4]);
-        enemigo->exp_dada = atoi(campos[5]);
+    // 2) Leer cada línea
+    while ((campos = leer_linea_csv(archivo, ',')) != NULL) {
+        Enemigo *e = malloc(sizeof(Enemigo));
+        if (!e) { perror("malloc"); break; }
 
-        Inventario *inv = (Inventario*)malloc(sizeof(Inventario));
-        if (!inv) { free(enemigo); fclose(archivo); return; }
+        // Rellenar campos básicos
+        strncpy(e->nombre,     campos[0], sizeof(e->nombre)-1);
+        strncpy(e->dificultad, campos[1], sizeof(e->dificultad)-1);
+        e->vida     = atoi(campos[2]);
+        e->ataque   = atoi(campos[3]);
+        e->defensa  = atoi(campos[4]);
+        e->exp_dada = atoi(campos[5]);
 
-        inv->armas = malloc(sizeof(Arma));
+        // Inicializar inventario
+        // ----------------------------------------------------------------
+        //  Arma
         {
-            char *sub = strdup(campos[6]);
-            char *name = strtok(sub, ",");
-            strcpy(inv->armas->nombre, name);
-            char *atk = strtok(NULL, ",");
-            inv->armas->ataque = atoi(atk);
-            char *dur = strtok(NULL, ",");
-            inv->armas->durabilidad = atoi(dur);
-            free(sub);
+            char *tmp = strdup(campos[6]);
+            char *tok = strtok(tmp, ",");
+            strncpy(e->item.armas.nombre, tok, sizeof(e->item.armas.nombre)-1);
+            tok = strtok(NULL, ","); e->item.armas.ataque     = atoi(tok);
+            tok = strtok(NULL, ","); e->item.armas.durabilidad = atoi(tok);
+            free(tmp);
         }
 
-        inv->armaduras = malloc(sizeof(Armadura));
+        //  Armaduras (casco, guantes, pechera, pantalones, botas)
+        const int idx[5] = {7,8,9,10,11};
+        Armadura *pieces[5] = {
+            &e->item.casco,
+            &e->item.guantes,
+            &e->item.pechera,
+            &e->item.pantalones,
+            &e->item.botas
+        };
+        for (int i = 0; i < 5; i++) {
+            char *tmp = strdup(campos[idx[i]]);
+            char *tok = strtok(tmp, ",");
+
+            // separar tipo y nombre
+            char *sp = strchr(tok, ' ');
+            if (sp) {
+                *sp = '\0';
+                strncpy(pieces[i]->tipo,   tok,       sizeof(pieces[i]->tipo)-1);
+                strncpy(pieces[i]->nombre, sp+1,     sizeof(pieces[i]->nombre)-1);
+            } else {
+                strncpy(pieces[i]->tipo, tok,        sizeof(pieces[i]->tipo)-1);
+            }
+
+            // leer el resto de campos
+            tok = strtok(NULL, ","); pieces[i]->defensa    = atoi(tok);
+            tok = strtok(NULL, ","); pieces[i]->durabilidad = atoi(tok);
+            tok = strtok(NULL, ",");
+            tok = strtok(NULL, ","); pieces[i]->valor      = atoi(tok);
+
+            free(tmp);
+        }
+
+        //  Poción
+        e->item.pocion = list_create();
         {
-            char *sub = strdup(campos[7]);
-            char *tipo = strtok(sub, ",");
-            strcpy(inv->armaduras->tipo, tipo);
-            char *name = strtok(NULL, ",");
-            strcpy(inv->armaduras->nombre, name);
-            char *def = strtok(NULL, ",");
-            inv->armaduras->defensa = atoi(def);
-            char *dur = strtok(NULL, ",");
-            inv->armaduras->durabilidad = atoi(dur);
-            char *buf = strtok(NULL, ",");
-            strcpy(inv->armaduras->bufo, buf);
-            char *val = strtok(NULL, ",");
-            inv->armaduras->valor = atoi(val);
-            free(sub);
+            char *tmp = strdup(campos[12]);
+            char *tok = strtok(tmp, ",");
+            Pocion *p = malloc(sizeof(Pocion));
+            strncpy(p->nombre, tok, sizeof(p->nombre)-1);
+
+            tok = strtok(NULL, ",");
+            strncpy(p->efecto, tok, sizeof(p->efecto)-1);
+
+            tok = strtok(NULL, ",");
+            p->valor = atoi(tok);
+
+            list_pushBack(e->item.pocion, p);
+            free(tmp);
         }
+        // ----------------------------------------------------------------
 
-        inv->pocion = malloc(sizeof(Pocion));
-        {
-            char *sub = strdup(campos[8]);
-            strcpy(inv->pocion->nombre, strtok(sub, ","));
-            strcpy(inv->pocion->efecto, strtok(NULL, ","));
-            inv->pocion->valor = atoi(strtok(NULL, ","));
-            free(sub);
-        }
-
-        insertMap(mobs, enemigo->nombre, enemigo);
-
+        // Insertar en el HashMap
+        insertMap(mobs, e->nombre, e);
     }
+
     fclose(archivo);
 }
 
-void mostrar_mobs(HashMap *mobs) {
-    if (!mobs) {
-        printf("No hay mapa de monstruos.\n");
-        return;
-    }
 
-    Pair *p = firstMap(mobs);
-    if (!p) {
+void mostrar_mobs(HashMap *mobs) {
+    Pair *pp = firstMap(mobs);
+    if (!pp) {
         printf("No hay monstruos cargados.\n");
         return;
     }
 
     printf("=== Lista de Monstruos ===\n");
-    for (; p; p = nextMap(mobs)) {
-        Enemigo *e = (Enemigo *)p->value;
+    for (; pp; pp = nextMap(mobs)) {
+        Enemigo *e = (Enemigo*)pp->value;
 
         // Estadísticas básicas
         printf("Nombre: %s | Dif: %s | Vida: %d | Atk: %d | Def: %d | Exp: %d\n",
-               e->nombre,
-               e->dificultad,
-               e->vida,
-               e->ataque,
-               e->defensa,
-               e->exp_dada);
+            e->nombre, e->dificultad, e->vida,
+            e->ataque, e->defensa, e->exp_dada
+        );
 
-        // Inventario (arma, armadura y poción)
-        if (e->item) {
-            Arma     *a  =  e->item->armas;
-            Armadura *ar =  e->item->armaduras;
-            Pocion   *poc=  e->item->pocion;
+        // Arma
+        Arma *a = &e->item.armas;
+        printf("  • Arma:    %s (Atk %d, Dur %d)\n",
+            a->nombre, a->ataque, a->durabilidad
+        );
 
-            printf("  • Arma:    %s (Atk %d, Dur %d)\n",
-                   a->nombre, a->ataque, a->durabilidad);
+        // Armaduras
+        Armadura *c = &e->item.casco;
+        printf("  • Casco:   %s %s (Def %d, Dur %d, Val %d)\n",
+            c->tipo, c->nombre, c->defensa, c->durabilidad, c->valor
+        );
+        Armadura *g = &e->item.guantes;
+        printf("  • Guantes: %s %s (Def %d, Dur %d, Val %d)\n",
+            g->tipo, g->nombre, g->defensa, g->durabilidad, g->valor
+        );
+        Armadura *p = &e->item.pechera;
+        printf("  • Pechera: %s %s (Def %d, Dur %d, Val %d)\n",
+            p->tipo, p->nombre, p->defensa, p->durabilidad, p->valor
+        );
+        Armadura *pa= &e->item.pantalones;
+        printf("  • Pantalones: %s %s (Def %d, Dur %d, Val %d)\n",
+            pa->tipo, pa->nombre, pa->defensa, pa->durabilidad, pa->valor
+        );
+        Armadura *b = &e->item.botas;
+        printf("  • Botas:   %s %s (Def %d, Dur %d, Val %d)\n",
+            b->tipo, b->nombre, b->defensa, b->durabilidad, b->valor
+        );
 
-            printf("  • Armadura:%s %s (Def %d, Dur %d, Val %d)\n",
-                   ar->tipo, ar->nombre,
-                   ar->defensa, ar->durabilidad, ar->valor);
-
-            printf("  • Pocion:  %s (%s, Val %d)\n",
-                   poc->nombre, poc->efecto, poc->valor);
+        // Poción(es)
+        if (list_size(e->item.pocion) > 0) {
+            printf("  • Pociones:\n");
+            for (Pocion *ppoc = list_first(e->item.pocion);
+                 ppoc;
+                 ppoc = list_next(e->item.pocion))
+            {
+                printf("      - %s (%s, Val %d)\n",
+                    ppoc->nombre, ppoc->efecto, ppoc->valor
+                );
+            }
         }
         putchar('\n');
     }
