@@ -283,22 +283,20 @@ void leer_mobs(HashMap *mobs) {
         // Rellenar campos básicos
         strncpy(e->nombre,     campos[0], sizeof(e->nombre)-1);
         strncpy(e->dificultad, campos[1], sizeof(e->dificultad)-1);
-        e->vida     = atoi(campos[2]);
-        e->ataque   = atoi(campos[3]);
-        e->defensa  = atoi(campos[4]);
+        e->vida = atoi(campos[2]);
+        e->ataque = atoi(campos[3]);
+        e->defensa = atoi(campos[4]);
         e->exp_dada = atoi(campos[5]);
 
         // Inicializar inventario
         // ----------------------------------------------------------------
         //  Arma
-        {
-            char *tmp = strdup(campos[6]);
-            char *tok = strtok(tmp, ",");
-            strncpy(e->item.armas.nombre, tok, sizeof(e->item.armas.nombre)-1);
-            tok = strtok(NULL, ","); e->item.armas.ataque     = atoi(tok);
-            tok = strtok(NULL, ","); e->item.armas.durabilidad = atoi(tok);
-            free(tmp);
-        }
+        char *tmp = strdup(campos[6]);
+        char *tok = strtok(tmp, ",");
+        strncpy(e->item.armas.nombre, tok, sizeof(e->item.armas.nombre)-1);
+        tok = strtok(NULL, ","); e->item.armas.ataque     = atoi(tok);
+        tok = strtok(NULL, ","); e->item.armas.durabilidad = atoi(tok);
+        free(tmp);
 
         //  Armaduras (casco, guantes, pechera, pantalones, botas)
         const int idx[5] = {7,8,9,10,11};
