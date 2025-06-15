@@ -81,7 +81,7 @@ typedef struct{
     Inventario *item;
 }Enemigo;
 
-void recoger_items(Jugador *player, Enemigo *enemigo) {
+void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
     limpiarPantalla();
 
     Inventario *loot = enemigo->item;
@@ -91,32 +91,60 @@ void recoger_items(Jugador *player, Enemigo *enemigo) {
         return;
     }
 
-    // Se construye una lista temporal con los 7 ítems fijos
-    List *items_posibles = list_create();
+    // Crear lista con los 7 ítems fijos
+    void *items_fijos[7];
+    int total_fijos = 0;
 
-    // Arma
+    // Copiar arma
     Arma *arma = malloc(sizeof(Arma));
-    *arma = loot->armas;
-    list_pushBack(items_posibles, arma);
+    *arma = loot->armas; // correcto: copiar estructura directa
+    items_fijos[total_fijos++] = arma;
 
-    // Armaduras
-    Armadura *casco = malloc(sizeof(Armadura)); 
-    *casco = loot->casco; list_pushBack(items_posibles, casco);
-    Armadura *guantes = malloc(sizeof(Armadura)); 
-    *guantes = loot->guantes; list_pushBack(items_posibles, guantes);
-    Armadura *pechera = malloc(sizeof(Armadura)); 
-    *pechera = loot->pechera; list_pushBack(items_posibles, pechera);
-    Armadura *pantalones = malloc(sizeof(Armadura)); 
-    *pantalones = loot->pantalones; list_pushBack(items_posibles, pantalones);
-    Armadura *botas = malloc(sizeof(Armadura)); 
-    *botas = loot->botas; list_pushBack(items_posibles, botas);
+    // Copiar armaduras
+    Armadura *casco = malloc(sizeof(Armadura));
+    *casco = loot->casco;
+    items_fijos[total_fijos++] = casco;
 
-    // Poción
+    Armadura *guantes = malloc(sizeof(Armadura));
+    *guantes = loot->guantes;
+    items_fijos[total_fijos++] = guantes;
+
+    Armadura *pechera = malloc(sizeof(Armadura));
+    *pechera = loot->pechera;
+    items_fijos[total_fijos++] = pechera;
+
+    Armadura *pantalones = malloc(sizeof(Armadura));
+    *pantalones = loot->pantalones;
+    items_fijos[total_fijos++] = pantalones;
+
+    Armadura *botas = malloc(sizeof(Armadura));
+    *botas = loot->botas;
+    items_fijos[total_fijos++] = botas;
+
+    // Copiar poción (si existe en la lista)
     Pocion *p = list_first(loot->pocion);
     if (p) {
         Pocion *pocion = malloc(sizeof(Pocion));
         *pocion = *p;
-        list_pushBack(items_posibles, pocion);
+        items_fijos[total_fijos++] = pocion;
+    }
+
+    // Mezclar los 7 ítems con Fisher–Yates
+    srand(time(NULL));
+    for (int i = total_fijos - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        void *tmp = items_fijos[i];
+        items_fijos[i] = items_fijos[j];
+        items_fijos[j] = tmp;
+    }
+
+    // Seleccionar cantidad aleatoria entre 1 y 7
+    int cantidad_a_mostrar = (rand() % 7) + 1;
+
+    // Crear lista temporal con esa cantidad de ítems
+    List *items_posibles = list_create();
+    for (int i = 0; i < cantidad_a_mostrar; i++) {
+        list_pushBack(items_posibles, items_fijos[i]);
     }
 
     while (1) {
