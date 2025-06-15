@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "list.h"
 #include "extra.h"
 #include "hashmap.h"
@@ -23,25 +24,29 @@ void mostrarMenuJuego(){
     puts("               FALTA EXP               ");
     puts("========================================");
   
-    puts("1) EXPLORAR ZONAS");
-    puts("2) VER ESTADO DEL JUGADOR");
-    puts("3) RECOLECTAR ITEMS DE LA ZONA");
-    puts("4) USAR ITEMS DEL INVENTARIO");
-    puts("5) EQUIPAR/DES-EQUIPAR ITEM");
-    puts("6) ATACAR A UN ENEMIGO");
-    puts("7) CONSULTAR ENEMIGOS EN LA ZONA");
+    puts("1) EXPLORAR ZONAS"); //explorar-zona
+    puts("2) VER ESTADO DEL JUGADOR"); //explorar-zona
+    puts("3) RECOLECTAR ITEMS DE LA ZONA"); //gention-items
+    puts("4) USAR ITEMS DEL INVENTARIO"); //gention-items
+    puts("5) EQUIPAR/DES-EQUIPAR ITEM"); //gention-items
+    puts("6) ATACAR A UN ENEMIGO"); //atacar-enemigo
+    puts("7) CONSULTAR ENEMIGOS EN LA ZONA"); //explorar-zona
+    // POSIBLE guardar partida
     puts("8) SALIR AL MENU PRINCIPAL");
 }
 
 void seleccionOpcion()
 {
+    bool jugadorVivo = true; // Variable para controlar si el jugador está activo
     char op;
-    while (1)
+    while(jugadorVivo)
     {
         //Se muestra el menú y se pide una opción
         mostrarMenuJuego();
         printf("INGRESE SU OPCION: ");
         scanf(" %c", &op);
+
+        
 
         //Se realizan las acciones según la opción seleccionada
         switch (op) {
@@ -62,10 +67,10 @@ void seleccionOpcion()
                 break;
             case '6':
                 //atacar(); //FUNCIÓN PARA ATACAR A UN ENEMIGO
-                return;
+                break;
             case '7':
                 //verEnemigos(); //FUNCIÓN PARA VER LOS ENEMIGOS Y SUS ESTADÍSTICAS 
-                return;
+                break;
             case '8':   
                 return;
             default:
@@ -73,7 +78,7 @@ void seleccionOpcion()
                 break;
         }
         presioneTeclaParaContinuar();
-    }   
+    } // El bucle continuará mientras el jugador esté activo
 }
 
 int main(){
@@ -89,6 +94,7 @@ int main(){
         {
         case '1':
             //Nueva partida
+            //cargar los csv y hacer conexiones. hacerlo en un condicional para que ocurra una sola vez
             seleccionOpcion();
             break;
         case '2':
