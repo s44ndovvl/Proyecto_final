@@ -22,12 +22,19 @@ typedef struct{
     int ataque;
     int durabilidad;
 }Arma;
+
 //Estructura para cada Item
 typedef struct{
     char nombre[50];
     char efecto[50];
     int valor;
-}Item;
+}Pocion;
+
+typedef struct{
+    Arma *armas;
+    Armadura *armaduras;
+    Pocion *pocion;
+}Inventario;
 
 //Estructura para cada escenario(nivel)
 struct Escenarios{
@@ -61,19 +68,19 @@ typedef struct{
 
 typedef struct{
     char nombre[50];
+    char dificultad[50];
     int vida;
     int defensa;
     int ataque;
     int exp_dada;
-    Item *item;
+    Inventario *item;
 }Enemigo;
 
 void leer_escenarios(HashMap * );
 void mostrarMap(HashMap * );
+void leer_mobs(HashMap * );
 
 int main(){
-    printf("hello world");
-
     HashMap *juego = createMap(100); // Crea un HashMap para almacenar los escenarios
     if (juego == NULL) {
         fprintf(stderr, "Error al crear el HashMap\n");
@@ -131,6 +138,35 @@ void leer_escenarios(HashMap * juego){
         if(atoi(e->id_derecha) != 0)e->derecha = (Escenarios*)searchMap(juego, e->id_derecha)->value; // Conecta el escenario derecha
 
     }
+}
+
+void leer_mobs(HashMap * mobs){
+    FILE *archivo = fopen("data/enemigos.csv", "r");
+    if (archivo == NULL){
+        perror("Error al abrir el archivo");
+        return;
+    }
+
+    char **campos;
+    campos = leer_linea_csv(archivo, ',');
+
+    while ((campos = leer_linea_csv(archivo, ',')) != NULL){
+        Enemigo * enemigo = (Enemigo*)malloc(sizeof(Enemigo));
+        strcpy(enemigo->nombre, campos[0]);
+        strcpy(enemigo->dificultad, campos[1]);
+        strcpy(enemigo->vida, campos[2]);
+
+        strcpy(escenario->id_arriba, campos[3]);
+        strcpy(escenario->id_abajo, campos[4]);
+        strcpy(escenario->id_izquierda, campos[5]);
+        strcpy(escenario->id_derecha, campos[6]);
+
+        strcpy(escenario->dificultad, campos[7]);
+
+        insertMap(mobs, escenario->id, escenario);
+
+    }
+    fclose(archivo);
 }
 
 void mostrarMap(HashMap * juego){
