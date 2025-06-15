@@ -156,21 +156,109 @@ void leer_mobs(HashMap * mobs){
 
     while ((campos = leer_linea_csv(archivo, ',')) != NULL){
         Enemigo * enemigo = (Enemigo*)malloc(sizeof(Enemigo));
+        if (enemigo == NULL) {
+            fprintf(stderr, "Error al asignar memoria para enemigo\n");
+            fclose(archivo);
+            return;
+        }
         strcpy(enemigo->nombre, campos[0]);
         strcpy(enemigo->dificultad, campos[1]);
-        strcpy(enemigo->vida, campos[2]);
+        enemigo->vida, atoi(campos[2]);
+        enemigo->ataque   = atoi(campos[3]);
+        enemigo->defensa  = atoi(campos[4]);
+        enemigo->exp_dada = atoi(campos[5]);
 
-        //strcpy(escenario->id_arriba, campos[3]);
-        //strcpy(escenario->id_abajo, campos[4]);
-        //strcpy(escenario->id_izquierda, campos[5]);
-        //strcpy(escenario->id_derecha, campos[6]);
+        Inventario *inv = (Inventario*)malloc(sizeof(Inventario));
+        if (!inv) { free(enemigo); fclose(archivo); return; }
 
-        //strcpy(escenario->dificultad, campos[7]);
+        inv->armas = malloc(sizeof(Arma));
+        {
+            char *sub = strdup(campos[6]);
+            char *name = strtok(sub, ",");
+            strcpy(inv->armas->nombre, name);
+            char *atk = strtok(NULL, ",");
+            inv->armas->ataque = atoi(atk);
+            char *dur = strtok(NULL, ",");
+            inv->armas->durabilidad = atoi(dur);
+            free(sub);
+        }
 
-        //insertMap(mobs, escenario->id, escenario);
+        inv->armaduras = malloc(sizeof(Armadura));
+        {
+            char *sub = strdup(campos[7]);
+            char *tipo = strtok(sub, ",");
+            strcpy(inv->armaduras->tipo, tipo);
+            char *name = strtok(NULL, ",");
+            strcpy(inv->armaduras->nombre, name);
+            char *def = strtok(NULL, ",");
+            inv->armaduras->defensa = atoi(def);
+            char *dur = strtok(NULL, ",");
+            inv->armaduras->durabilidad = atoi(dur);
+            char *buf = strtok(NULL, ",");
+            strcpy(inv->armaduras->bufo, buf);
+            char *val = strtok(NULL, ",");
+            inv->armaduras->valor = atoi(val);
+            free(sub);
+        }
+
+        inv->pocion = malloc(sizeof(Pocion));
+        {
+            char *sub = strdup(campos[8]);
+            strcpy(inv->pocion->nombre, strtok(sub, ","));
+            strcpy(inv->pocion->efecto, strtok(NULL, ","));
+            inv->pocion->valor = atoi(strtok(NULL, ","));
+            free(sub);
+        }
+
+        insertMap(mobs, enemigo->nombre, enemigo);
 
     }
     fclose(archivo);
+}
+
+void mostrar_mobs(HashMap *mobs) {
+    if (!mobs) {
+        printf("No hay mapa de monstruos.\n");
+        return;
+    }
+
+    Pair *p = firstMap(mobs);
+    if (!p) {
+        printf("No hay monstruos cargados.\n");
+        return;
+    }
+
+    printf("=== Lista de Monstruos ===\n");
+    for (; p; p = nextMap(mobs)) {
+        Enemigo *e = (Enemigo *)p->value;
+
+        // Estadísticas básicas
+        printf("Nombre: %s | Dif: %s | Vida: %d | Atk: %d | Def: %d | Exp: %d\n",
+               e->nombre,
+               e->dificultad,
+               e->vida,
+               e->ataque,
+               e->defensa,
+               e->exp_dada);
+
+        // Inventario (arma, armadura y poción)
+        if (e->item) {
+            Arma     *a  =  e->item->armas;
+            Armadura *ar =  e->item->armaduras;
+            Pocion   *poc=  e->item->pocion;
+
+            printf("  • Arma:    %s (Atk %d, Dur %d)\n",
+                   a->nombre, a->ataque, a->durabilidad);
+
+            printf("  • Armadura:%s %s (Def %d, Dur %d, Val %d)\n",
+                   ar->tipo, ar->nombre,
+                   ar->defensa, ar->durabilidad, ar->valor);
+
+            printf("  • Pocion:  %s (%s, Val %d)\n",
+                   poc->nombre, poc->efecto, poc->valor);
+        }
+        putchar('\n');
+    }
 }
 
 void mostrarMap(HashMap * juego){
