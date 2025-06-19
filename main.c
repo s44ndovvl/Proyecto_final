@@ -85,7 +85,9 @@ void mostrarMenuPrincipal();
 void mostrarMenuJuego();
 
 void seleccionOpcion(Jugador * );
+
 bool cicloPelea(Jugador * , List * );
+void menuOpcionesPelea();
 
 void leer_escenarios(HashMap * );
 void mostrarMap(HashMap * );
@@ -476,11 +478,69 @@ bool cicloPelea(Jugador * player, List * enemigos)
 {
     Enemigo * enemigo = seleccionarEnemigo(enemigos); // Selecciona un enemigo de la lista proporcionada
 
-    // Aquí se implementará el ciclo de pelea con los enemigos de la zona actual
-    // Se utilizará la lista de enemigos proporcionada en el parámetro
-    // Se implementarán las mecánicas de ataque, defensa, uso de pociones, etc.
-    // Por ahora, solo se imprimirá un mensaje indicando que se ha iniciado el ciclo de pelea
-    puts("Iniciando ciclo de pelea...");
+    bool EnemigoVivo = true; // Variable para controlar si el enemigo está activo
+    while(EnemigoVivo && player->vida > 0) {
+        limpiarPantalla();
+        printf("Jugador: %s | Vida: %d | Estamina: %d | Ataque: %d | Defensa: %d\n",
+            player->nombre, player->vida, player->estamina, player->ataque, player->defensa);
+        printf("Enemigo: %s | Vida: %d | Defensa: %d\n",
+            enemigo->nombre, enemigo->vida, enemigo->defensa);
+        
+        menuOpcionesPelea(); // Muestra el menú de opciones de pelea
+        
+        char opcion;
+        printf("Seleccione una opción: ");
+        scanf(" %c", &opcion);
+
+        switch (opcion)
+        {
+        case '1':
+            /* code */
+            break;
+        case '2':
+            /* code */
+            break;
+        case '3':
+            /* code */
+            break;
+        
+        default:
+            puts("Opción no válida, por favor intente de nuevo.");
+            continue;
+        }
+        //if(opcion != '1' || opcion != '2'|| opcion != '3') continue;
+
+
+        // Simulación de acciones (esto debería ser reemplazado por la lógica real del juego)
+        // Por ejemplo:
+        // - El jugador ataca al enemigo
+        // - El enemigo ataca al jugador
+        // - Se verifica si alguno ha muerto
+        // - Se actualizan las estadísticas
+
+        // Simulación simple para continuar el ciclo
+        if (enemigo->vida <= 0) {
+            puts("El enemigo ha sido derrotado!");
+            EnemigoVivo = false; // El enemigo ya no está vivo
+        }
+        
+    }
+
+    if (player->vida <= 0) {
+        puts("El jugador ha sido derrotado!");
+        return false; // El jugador ha muerto
+    }
 
     return true;
+}
+
+void menuOpcionesPelea()
+{
+    puts("========================================");
+    puts("               PELEA                   ");
+    puts("========================================");
+    puts("1) Atacar al enemigo");
+    puts("2) Usar poción");
+    puts("3) Huir de la pelea");
+    puts("=========================================");
 }
