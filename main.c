@@ -164,14 +164,11 @@ void mostrarMenuJuego(){
     puts("========================================");
   
     puts("1) EXPLORAR ZONAS"); //explorar-zona
-    puts("2) VER ESTADO DEL JUGADOR"); //explorar-zona
-    puts("3) RECOLECTAR ITEMS DE LA ZONA"); //gention-items
-    puts("4) USAR ITEMS DEL INVENTARIO"); //gention-items
-    puts("5) EQUIPAR/DES-EQUIPAR ITEM"); //gention-items
-    puts("6) ATACAR A UN ENEMIGO"); //atacar-enemigo
-    puts("7) CONSULTAR ENEMIGOS EN LA ZONA"); //explorar-zona
+    puts("2) VER INVENTARIO"); //explorar-zona
+    puts("3) RECOLECTAR ITEMS"); //gention-items
+    puts("4) ATACAR A UN ENEMIGO"); //atacar-enemigo
     // POSIBLE guardar partida
-    puts("8) SALIR AL MENU PRINCIPAL");
+    puts("5) SALIR AL MENU PRINCIPAL");
 }
 
 void seleccionOpcion()
@@ -464,8 +461,4 @@ Jugador * createPlayer(char nombre[], HashMap * juego){
     player->inventario.pocion = list_create();
 
     return player;
-}
-
-void verEstado(HashMap * player){
-
 }
