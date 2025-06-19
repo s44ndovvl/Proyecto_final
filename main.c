@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 #include "list.h"
 #include "extra.h"
 #include "hashmap.h"
@@ -94,9 +95,10 @@ void leer_escenarios(HashMap * );
 void mostrarMap(HashMap * );
 void leer_mobs(HashMap * );
 void mostrar_mobs(HashMap * );
+void asignar_mobs(HashMap * , HashMap * );
 
 Jugador * createPlayer(char * , HashMap * );
-void verEstado(HashMap * );
+Enemigo * seleccionarEnemigo(List * );
 
 int main(){
     HashMap *juego = createMap(100); // Crea un HashMap para almacenar los escenarios
@@ -106,14 +108,16 @@ int main(){
         fprintf(stderr, "Error al crear el HashMap\n");
         return 1;
     }
-    leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
-    mostrarMap(juego);
-    leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
-    mostrar_mobs(mobs); // Muestra el contenido del HashMap
-
+    srand(time(NULL));
+    //leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
+    //mostrarMap(juego);
+    //leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
+    //mostrar_mobs(mobs); // Muestra el contenido del HashMap
+    //asignar_mobs(juego, mobs);
 
 
     char op;
+    char name[50];
     do{
         //Se muestra un menú principal y se selecciona una opción
         mostrarMenuPrincipal();
@@ -126,8 +130,11 @@ int main(){
         case '1':
             //Nueva partida
             //cargar los csv y hacer conexiones. hacerlo en un condicional para que ocurra una sola vez
-            char * name;
-            printf("Indeque el nombre del nuevo jugador");
+            leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
+            leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
+            asignar_mobs(juego, mobs);
+
+            printf("Indeque el nombre del nuevo jugador:");
             scanf(" %49s", name);
             getchar();
             player = createPlayer(name, juego);
@@ -479,7 +486,7 @@ bool cicloPelea(Jugador * player, List * enemigos)
 {
     Enemigo * enemigo = seleccionarEnemigo(enemigos); // Selecciona un enemigo de la lista proporcionada
 
-    calcularDefensaActual(player);
+    //calcularDefensaActual(player);
 
     bool EnemigoVivo = true; // Variable para controlar si el enemigo está activo
     while(EnemigoVivo && player->vida > 0) {
@@ -546,4 +553,57 @@ void menuOpcionesPelea()
     puts("2) Usar poción");
     puts("3) Huir de la pelea");
     puts("=========================================");
+}
+
+void asignar_mobs(HashMap * escenarios, HashMap * mobs){
+    for (Pair * esc = firstMap(escenarios); esc != NULL; esc = nextMap(escenarios)){
+        Escenarios * escenario = esc->value;
+
+        if (!escenario->Enemigos)
+            escenario->Enemigos = list_create();
+
+        for (Pair * par_mob = firstMap(mobs); par_mob != NULL; par_mob = nextMap(mobs)){
+            Enemigo * mob = par_mob->value;
+
+            if (strcmp(mob->dificultad, escenario->dificultad) == 0){
+                list_pushBack(escenario->Enemigos, mob);
+            }
+        }
+    }
+}
+
+Enemigo * seleccionarEnemigo(List * enemigos){
+    if(list_size(enemigos) == 0) return NULL;
+
+    int index = rand() % list_size(enemigos);
+
+    int i = 0;
+    for (Enemigo *mob = list_first(enemigos); mob != NULL; mob = list_next(enemigos)){
+        if (i == index){
+            Enemigo * seleccionado = malloc(sizeof(Enemigo));
+            *seleccionado = *mob;
+
+            Inventario * loot = malloc(sizeof(Inventario));
+
+            loot->armas = mob->item.armas;
+
+            loot->casco = mob->item.casco;
+            loot->pechera = mob->item.pechera;
+            loot->guantes = mob->item.guantes;
+            loot->pantalones = mob->item.pantalones;
+            loot->botas = mob->item.botas;
+
+            loot->pocion = list_create();
+            for (Pocion * p = list_first(mob->item.pocion); p != NULL; p = list_next(mob->item.pocion)){
+                Pocion * nueva = malloc(sizeof(Pocion));
+                *nueva = *p;
+                list_pushBack(loot->pocion, nueva);
+            }
+
+            seleccionado->item = *loot;
+            return seleccionado;
+        }
+        i++;
+    }
+    return NULL;
 }
