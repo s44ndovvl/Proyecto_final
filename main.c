@@ -16,6 +16,7 @@ typedef struct{
     int durabilidad;
     char bufo[50];
     int valor;
+    //int nivel_requerido;
 }Armadura;
 
 typedef struct{
@@ -68,7 +69,7 @@ typedef struct{
     int experiencia;
     int nivel;
     Escenarios *actual;
-    List *inventario;
+    Inventario inventario;
 }Jugador;
 
 typedef struct{
@@ -78,18 +79,65 @@ typedef struct{
     int defensa;
     int ataque;
     int exp_dada;
-    Inventario *item;
+    Inventario item;
 }Enemigo;
+
+void guardar_item(Inventario * inv, void * item){
+    if (!item) return;
+
+    // Comprobamos si es poción
+    Pocion *poc = (Pocion *)item;
+    if (strcmp(poc->efecto, "Vida") == 0 || strcmp(poc->efecto, "Inmunidad") || 
+    strcmp(poc->efecto, "Escudo") || strcmp(poc->efecto, "Estamina")){
+        list_pushBack(inv->pocion, poc);
+    }
+
+    // Comprobamos si es arma
+    Arma * arma = (Arma *)item;
+    if (arma->ataque > 0 && arma->durabilidad > 0){
+        printf("Arma actual: %s (Ataque: %d, Durabilidad: %d)\n", inv->armas.nombre, inv->armas.ataque, inv->armas.durabilidad);
+        printf("Nueva arma:  %s (Ataque: %d, Durabilidad: %d)\n", arma->nombre, arma->ataque, arma->durabilidad);
+        printf("¿Deseas reemplazar tu arma actual? (1 = Sí, 0 = No): ");
+        int decision;
+        scanf("%d", &decision);
+        if (decision == 1) {
+            inv->armas = *arma;
+            printf("Has reemplazado tu arma con éxito.\n");
+        } else {
+            printf("No se reemplazó el arma.\n");
+        }
+        return;
+    }
+
+    //Comprobamos si es armadura
+    Armadura * armadura = (Armadura *)item;
+    Armadura * actual = NULL;
+    if(strcmp(armadura->tipo, "Casco") == 0) actual = &inv->casco;
+    else if (strcmp(armadura->tipo, "Pechera") == 0) actual = &inv->pechera;
+    else if (strcmp(armadura->tipo, "Guantes") == 0) actual = &inv->guantes;
+    else if (strcmp(armadura->tipo, "Pantalones") == 0) actual = &inv->pantalones;
+    else if (strcmp(armadura->tipo, "Botas") == 0) actual = &inv->botas;
+
+    if (actual) {
+        printf("\n[%s]\n", armadura->tipo);
+        printf("Armadura actual: %s (Defensa: %d, Durabilidad: %d)\n", actual->nombre, actual->defensa, actual->durabilidad);
+        printf("Nueva armadura:  %s (Defensa: %d, Durabilidad: %d)\n", armadura->nombre, armadura->defensa, armadura->durabilidad);
+        printf("¿Deseas reemplazar esta armadura? (1 = Sí, 0 = No): ");
+        int decision;
+        scanf("%d", &decision);
+        if (decision == 1) {
+            *actual = *armadura;
+            printf("Has reemplazado la armadura con éxito.\n");
+        } else {
+            printf("No se reemplazó la armadura.\n");
+        }
+    }
+}
 
 void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
     limpiarPantalla();
 
-    Inventario *loot = enemigo->item;
-    if (!loot) {
-        puts("El enemigo no dejó objetos.");
-        presioneTeclaParaContinuar();
-        return;
-    }
+    Inventario *loot = &enemigo->item;
 
     // Crear lista con los 7 ítems fijos
     void *items_fijos[7];
@@ -97,31 +145,22 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
 
     // Copiar arma
     Arma *arma = malloc(sizeof(Arma));
-    *arma = loot->armas; // correcto: copiar estructura directa
+    *arma = loot->armas;
     items_fijos[total_fijos++] = arma;
 
     // Copiar armaduras
-    Armadura *casco = malloc(sizeof(Armadura));
-    *casco = loot->casco;
-    items_fijos[total_fijos++] = casco;
+    Armadura *casco = malloc(sizeof(Armadura)); 
+    *casco = loot->casco; items_fijos[total_fijos++] = casco;
+    Armadura *guantes = malloc(sizeof(Armadura)); 
+    *guantes = loot->guantes; items_fijos[total_fijos++] = guantes;
+    Armadura *pechera = malloc(sizeof(Armadura)); 
+    *pechera = loot->pechera; items_fijos[total_fijos++] = pechera;
+    Armadura *pantalones = malloc(sizeof(Armadura)); 
+    *pantalones = loot->pantalones; items_fijos[total_fijos++] = pantalones;
+    Armadura *botas = malloc(sizeof(Armadura)); 
+    *botas = loot->botas; items_fijos[total_fijos++] = botas;
 
-    Armadura *guantes = malloc(sizeof(Armadura));
-    *guantes = loot->guantes;
-    items_fijos[total_fijos++] = guantes;
-
-    Armadura *pechera = malloc(sizeof(Armadura));
-    *pechera = loot->pechera;
-    items_fijos[total_fijos++] = pechera;
-
-    Armadura *pantalones = malloc(sizeof(Armadura));
-    *pantalones = loot->pantalones;
-    items_fijos[total_fijos++] = pantalones;
-
-    Armadura *botas = malloc(sizeof(Armadura));
-    *botas = loot->botas;
-    items_fijos[total_fijos++] = botas;
-
-    // Copiar poción (si existe en la lista)
+    // Copiar poción (si existe)
     Pocion *p = list_first(loot->pocion);
     if (p) {
         Pocion *pocion = malloc(sizeof(Pocion));
@@ -129,7 +168,7 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
         items_fijos[total_fijos++] = pocion;
     }
 
-    // Mezclar los 7 ítems con Fisher–Yates
+    // Mezclar los ítems
     srand(time(NULL));
     for (int i = total_fijos - 1; i > 0; i--) {
         int j = rand() % (i + 1);
@@ -138,10 +177,9 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
         items_fijos[j] = tmp;
     }
 
-    // Seleccionar cantidad aleatoria entre 1 y 7
-    int cantidad_a_mostrar = (rand() % 7) + 1;
+    // Elegir cuántos mostrar (entre 1 y 7)
+    int cantidad_a_mostrar = (rand() % total_fijos) + 1;
 
-    // Crear lista temporal con esa cantidad de ítems
     List *items_posibles = list_create();
     for (int i = 0; i < cantidad_a_mostrar; i++) {
         list_pushBack(items_posibles, items_fijos[i]);
@@ -158,16 +196,16 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
         while (objeto != NULL) {
             list_pushBack(temp, objeto);
 
-            // Mostrar según tipo
+            // Mostrar con tipo según posición
             if (index == 1) {
-                Arma *arma = objeto;
-                printf("%d) [ARMA] %s - Ataque: %d - Durabilidad: %d\n", index, arma->nombre, arma->ataque, arma->durabilidad);
+                Arma *a = objeto;
+                printf("%d) [ARMA] %s - Ataque: %d - Durabilidad: %d\n", index, a->nombre, a->ataque, a->durabilidad);
             } else if (index >= 2 && index <= 6) {
-                Armadura *armadura = objeto;
-                printf("%d) [ARMADURA] %s - Defensa: %d - Durabilidad: %d\n", index, armadura->nombre, armadura->defensa, armadura->durabilidad);
+                Armadura *arm = objeto;
+                printf("%d) [ARMADURA] %s - Defensa: %d - Durabilidad: %d\n", index, arm->nombre, arm->defensa, arm->durabilidad);
             } else {
-                Pocion *pocion = objeto;
-                printf("%d) [POCIÓN] %s - %s (%d)\n", index, pocion->nombre, pocion->efecto, pocion->valor);
+                Pocion *poc = objeto;
+                printf("%d) [POCIÓN] %s - %s (%d)\n", index, poc->nombre, poc->efecto, poc->valor);
             }
 
             index++;
@@ -176,19 +214,20 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
 
         printf("%d) TOMAR TODO\n", index);
         printf("%d) CANCELAR\n", index + 1);
-        printf("\nSELECCIONE UNA OPCION: ");
+        printf("\nSELECCIONE UNA OPCIÓN: ");
+        
         int opcion;
         scanf("%d", &opcion);
 
         if (opcion == index + 1 || opcion <= 0) {
-            puts("CANCELANDO U OPCION INVALIDA");
+            puts("CANCELANDO O OPCIÓN INVÁLIDA");
             presioneTeclaParaContinuar();
             break;
         }
 
         if (opcion == index) {
             for (void *elemento = list_first(items_posibles); elemento != NULL; elemento = list_next(items_posibles)) {
-                list_pushBack(player->inventario, elemento);
+                guardar_item(&player->inventario, elemento);
             }
             puts("HAS RECOGIDO TODOS LOS OBJETOS");
             presioneTeclaParaContinuar();
@@ -202,7 +241,7 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
             }
 
             if (item != NULL) {
-                list_pushBack(player->inventario, item);
+                guardar_item(&player->inventario, item);
 
                 // reconstruir lista sin el ítem tomado
                 List *nueva = list_create();
@@ -221,6 +260,7 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
         }
     }
 }
+
 
 int main(){
     return 0;
