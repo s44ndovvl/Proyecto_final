@@ -91,9 +91,13 @@ void mostrarMap(HashMap * );
 void leer_mobs(HashMap * );
 void mostrar_mobs(HashMap * );
 
+Jugador createPlayer(char * , HashMap * );
+void verEstado(HashMap * );
+
 int main(){
     HashMap *juego = createMap(100); // Crea un HashMap para almacenar los escenarios
     HashMap *mobs = createMap(100); // Crea un HashMap para almacenar los monstruos
+    Jugador * player = NULL;
     if (juego == NULL) {
         fprintf(stderr, "Error al crear el HashMap\n");
         return 1;
@@ -424,4 +428,44 @@ void mostrarMap(HashMap * juego){
         printf("ID: %s, Nombre: %s, Leyenda: %s, Dificultad: %s\n", e->id, e->nombre, e->leyenda, e->dificultad);
         printf("Arriba: %s, Abajo: %s, Izquierda: %s, Derecha: %s\n", e->id_arriba, e->id_abajo, e->id_izquierda, e->id_derecha);
     }
+}
+
+Jugador * createPlayer(char nombre[], HashMap * juego){
+    Jugador * player = (Jugador *)malloc(sizeof(Jugador));
+
+    strcpy(player->nombre, nombre);
+    Pair * inicio = firstMap(juego);
+    player->vida = 100;
+    player->estamina = 15;
+    player->defensa = 100;
+    player->ataque = 1;
+    player->experiencia = 0;
+    player->nivel = 0;
+    player->actual = inicio->value;
+    
+    strcpy(player->inventario.armas.nombre, "Sin arma");
+    player->inventario.armas.ataque = 0;
+    player->inventario.armas.durabilidad = 0;
+
+    Armadura vacia;
+    strcpy(vacia.nombre, "Sin armadura");
+    strcpy(vacia.tipo, "");
+    vacia.defensa = 0;
+    vacia.durabilidad = 0;
+    strcpy(vacia.bufo, "");
+    vacia.valor = 0;
+
+    player->inventario.casco = vacia;
+    player->inventario.pechera = vacia;
+    player->inventario.guantes = vacia;
+    player->inventario.pantalones = vacia;
+    player->inventario.botas = vacia;
+
+    player->inventario.pocion = list_create();
+
+    return player;
+}
+
+void verEstado(HashMap * player){
+
 }
