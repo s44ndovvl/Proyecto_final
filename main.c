@@ -84,7 +84,8 @@ typedef struct{
 void mostrarMenuPrincipal();
 void mostrarMenuJuego();
 
-void seleccionOpcion();
+void seleccionOpcion(Jugador * );
+bool cicloPelea(Jugador * , List * );
 
 void leer_escenarios(HashMap * );
 void mostrarMap(HashMap * );
@@ -108,6 +109,7 @@ int main(){
     mostrar_mobs(mobs); // Muestra el contenido del HashMap
 
 
+
     char op;
     do{
         //Se muestra un menú principal y se selecciona una opción
@@ -121,7 +123,12 @@ int main(){
         case '1':
             //Nueva partida
             //cargar los csv y hacer conexiones. hacerlo en un condicional para que ocurra una sola vez
-            seleccionOpcion();
+            char * name;
+            printf("Indeque el nombre del nuevo jugador");
+            scanf(" %49s", name);
+            getchar();
+            player = createPlayer(name, juego);
+            seleccionOpcion(player);
             break;
         case '2':
             //Ayuda
@@ -171,7 +178,7 @@ void mostrarMenuJuego(){
     puts("5) SALIR AL MENU PRINCIPAL");
 }
 
-void seleccionOpcion()
+void seleccionOpcion(Jugador * player)
 {
     bool jugadorVivo = true; // Variable para controlar si el jugador está activo
     char op;
@@ -188,6 +195,8 @@ void seleccionOpcion()
         switch (op) {
             case '1':
                 //explorarZonas(); //FUNCIÓN PARA EXPLORAR LAS ZONAS
+
+                jugadorVivo = cicloPelea(player, player->actual->Enemigos); // Ciclo de pelea con los enemigos de la zona actual
                 break;
             case '2':
                 //verEstado(); //FUNCIÓN PARA VER EL ESTADO DEL JUGADOR
@@ -461,4 +470,17 @@ Jugador * createPlayer(char nombre[], HashMap * juego){
     player->inventario.pocion = list_create();
 
     return player;
+}
+
+bool cicloPelea(Jugador * player, List * enemigos)
+{
+    Enemigo * enemigo = seleccionarEnemigo(enemigos); // Selecciona un enemigo de la lista proporcionada
+
+    // Aquí se implementará el ciclo de pelea con los enemigos de la zona actual
+    // Se utilizará la lista de enemigos proporcionada en el parámetro
+    // Se implementarán las mecánicas de ataque, defensa, uso de pociones, etc.
+    // Por ahora, solo se imprimirá un mensaje indicando que se ha iniciado el ciclo de pelea
+    puts("Iniciando ciclo de pelea...");
+
+    return true;
 }
