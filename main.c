@@ -64,6 +64,7 @@ typedef struct{
     int vida;
     int estamina;
     int defensa;
+    int defensa_total;
     int ataque;
     int experiencia;
     int nivel;
@@ -478,6 +479,8 @@ bool cicloPelea(Jugador * player, List * enemigos)
 {
     Enemigo * enemigo = seleccionarEnemigo(enemigos); // Selecciona un enemigo de la lista proporcionada
 
+    calcularDefensaActual(player);
+
     bool EnemigoVivo = true; // Variable para controlar si el enemigo está activo
     while(EnemigoVivo && player->vida > 0) {
         limpiarPantalla();
@@ -495,7 +498,7 @@ bool cicloPelea(Jugador * player, List * enemigos)
         switch (opcion)
         {
         case '1':
-            /* code */
+            enemigo->vida -= (player->ataque - enemigo->defensa); // El enemigo recibe daño del jugador
             break;
         case '2':
             /* code */
@@ -509,7 +512,7 @@ bool cicloPelea(Jugador * player, List * enemigos)
             continue;
         }
         //if(opcion != '1' || opcion != '2'|| opcion != '3') continue;
-
+        player->vida -= (int) (enemigo->ataque/(player->defensa_total * 0.01)); // El jugador recibe daño del enemigo
 
         // Simulación de acciones (esto debería ser reemplazado por la lógica real del juego)
         // Por ejemplo:
