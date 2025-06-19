@@ -91,7 +91,7 @@ void mostrarMap(HashMap * );
 void leer_mobs(HashMap * );
 void mostrar_mobs(HashMap * );
 
-Jugador createPlayer(char * , HashMap * );
+Jugador * createPlayer(char * , HashMap * );
 void verEstado(HashMap * );
 
 int main(){
