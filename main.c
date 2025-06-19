@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 #include "list.h"
 #include "extra.h"
 #include "hashmap.h"
@@ -91,6 +92,40 @@ void mostrarMap(HashMap * );
 void leer_mobs(HashMap * );
 void mostrar_mobs(HashMap * );
 
+void esperar(int segundos) {
+    time_t inicio = time(NULL);
+    while (time(NULL) - inicio < segundos) {
+        // Espera activa (busy wait)
+    }
+}
+
+void mostrarCreditos()
+{
+    limpiarPantalla();
+    const char* creditos[] = {
+        "Falta Creatividad Studios Presenta:",
+        "Falta XP",
+        "",
+        "Director: Eduardo Sandoval",
+        "Productor: Joaquin Contreras",
+        "Creacion de Enemigos: Brandon Caceres",
+        "Interface Designer: Josue Huaiquil", "",
+        "Equipo de Programacion:",
+        "Eduardo Sandoval",
+        "Joaquin Contreras",
+        "Brandon Caceres",
+        "Josue Huaiquil", "",
+        "Gracias por jugar Falta XP!"
+    };
+
+    int cantidad = sizeof(creditos) / sizeof(creditos[0]);
+
+    for (int i = 0; i < cantidad; i++) {
+        printf("%s\n", creditos[i]);
+        esperar(1);         // Espera 1 segundos
+    }
+}
+
 int main(){
     HashMap *juego = createMap(100); // Crea un HashMap para almacenar los escenarios
     HashMap *mobs = createMap(100); // Crea un HashMap para almacenar los monstruos
@@ -125,7 +160,7 @@ int main(){
             break;
         case '3':
             //Creditos
-            //mostrarCreditos();
+            mostrarCreditos();
             break;
         case '4':
             //Salir
