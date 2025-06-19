@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 #include "list.h"
 #include "extra.h"
 #include "hashmap.h"
@@ -62,13 +63,18 @@ struct Escenarios{
 typedef struct{
     char nombre[50];
     int vida;
+    int max_vida;
     int estamina;
+    int max_estamina;
     int defensa;
+    int max_defensa;
+    int defensa_total;
     int ataque;
     int experiencia;
     int nivel;
     Escenarios *actual;
     Inventario inventario;
+    bool inmunidad;
 }Jugador;
 
 typedef struct{
@@ -81,30 +87,49 @@ typedef struct{
     Inventario item;
 }Enemigo;
 
+/**********************************************/
+/*                 Prototipado                */
+/**********************************************/
+
 void mostrarMenuPrincipal();
 void mostrarMenuJuego();
-
-void seleccionOpcion();
+void menuOpcionesPelea();
 
 void leer_escenarios(HashMap * );
-void mostrarMap(HashMap * );
 void leer_mobs(HashMap * );
+void asignar_mobs(HashMap * , HashMap * );
+Enemigo * seleccionarEnemigo(List * );
+Jugador * createPlayer(char * , HashMap * );
+
 void mostrar_mobs(HashMap * );
+void mostrarMap(HashMap * );
+
+bool usarPociones(Jugador * );
+bool cicloPelea(Jugador * , List * );
+void seleccionOpcion(Jugador * );
+
+/**********************************************/
+/*                    Main                    */
+/**********************************************/
 
 int main(){
     HashMap *juego = createMap(100); // Crea un HashMap para almacenar los escenarios
     HashMap *mobs = createMap(100); // Crea un HashMap para almacenar los monstruos
+    Jugador * player = NULL;
     if (juego == NULL) {
         fprintf(stderr, "Error al crear el HashMap\n");
         return 1;
     }
-    leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
-    mostrarMap(juego);
-    leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
-    mostrar_mobs(mobs); // Muestra el contenido del HashMap
+    srand(time(NULL));
+    //leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
+    //mostrarMap(juego);
+    //leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
+    //mostrar_mobs(mobs); // Muestra el contenido del HashMap
+    //asignar_mobs(juego, mobs);
 
 
     char op;
+    char name[50];
     do{
         //Se muestra un menú principal y se selecciona una opción
         mostrarMenuPrincipal();
@@ -117,7 +142,15 @@ int main(){
         case '1':
             //Nueva partida
             //cargar los csv y hacer conexiones. hacerlo en un condicional para que ocurra una sola vez
-            seleccionOpcion();
+            leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
+            leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
+            asignar_mobs(juego, mobs);
+
+            printf("Indeque el nombre del nuevo jugador:");
+            scanf(" %49s", name);
+            getchar();
+            player = createPlayer(name, juego);
+            seleccionOpcion(player);
             break;
         case '2':
             //Ayuda
@@ -141,6 +174,11 @@ int main(){
     return 0;
 }
 
+/**********************************************/
+/*               Mostrar menus                */
+/**********************************************/
+
+
 void mostrarMenuPrincipal() {
     limpiarPantalla();
     puts("========================================");
@@ -160,61 +198,27 @@ void mostrarMenuJuego(){
     puts("========================================");
   
     puts("1) EXPLORAR ZONAS"); //explorar-zona
-    puts("2) VER ESTADO DEL JUGADOR"); //explorar-zona
-    puts("3) RECOLECTAR ITEMS DE LA ZONA"); //gention-items
-    puts("4) USAR ITEMS DEL INVENTARIO"); //gention-items
-    puts("5) EQUIPAR/DES-EQUIPAR ITEM"); //gention-items
-    puts("6) ATACAR A UN ENEMIGO"); //atacar-enemigo
-    puts("7) CONSULTAR ENEMIGOS EN LA ZONA"); //explorar-zona
+    puts("2) VER INVENTARIO"); //explorar-zona
+    puts("3) RECOLECTAR ITEMS"); //gention-items
+    puts("4) ATACAR A UN ENEMIGO"); //atacar-enemigo
     // POSIBLE guardar partida
-    puts("8) SALIR AL MENU PRINCIPAL");
+    puts("5) SALIR AL MENU PRINCIPAL");
 }
 
-void seleccionOpcion()
+void menuOpcionesPelea()
 {
-    bool jugadorVivo = true; // Variable para controlar si el jugador está activo
-    char op;
-    while(jugadorVivo)
-    {
-        //Se muestra el menú y se pide una opción
-        mostrarMenuJuego();
-        printf("INGRESE SU OPCION: ");
-        scanf(" %c", &op);
-
-        
-
-        //Se realizan las acciones según la opción seleccionada
-        switch (op) {
-            case '1':
-                //explorarZonas(); //FUNCIÓN PARA EXPLORAR LAS ZONAS
-                break;
-            case '2':
-                //verEstado(); //FUNCIÓN PARA VER EL ESTADO DEL JUGADOR
-                break;
-            case '3':
-                //recolectarItems(); //FUNCIÓN PARA RECOLECTAR LOS ITEMS DE LA ZONA
-                break;
-            case '4':
-                //usarItem(); //FUNCIÓN PARA USAR LOS ITEMS
-                break;
-            case '5':
-                //equipar_DesequiparItem(); //FUNCIÓN PARA EQUIPAR Y DESEQUIPAR ITEMS
-                break;
-            case '6':
-                //atacar(); //FUNCIÓN PARA ATACAR A UN ENEMIGO
-                break;
-            case '7':
-                //verEnemigos(); //FUNCIÓN PARA VER LOS ENEMIGOS Y SUS ESTADÍSTICAS 
-                break;
-            case '8':   
-                return;
-            default:
-                printf("Opcion no valida.\n");
-                break;
-        }
-        presioneTeclaParaContinuar();
-    } // El bucle continuará mientras el jugador esté activo
+    puts("========================================");
+    puts("               PELEA                   ");
+    puts("========================================");
+    puts("1) Atacar al enemigo");
+    puts("2) Usar poción");
+    puts("3) Huir de la pelea");
+    puts("=========================================");
 }
+
+/**********************************************/
+/*                  Leer CSVs                 */
+/**********************************************/
 
 void leer_escenarios(HashMap * juego){
     FILE *archivo = fopen("data/mapa.csv", "r");
@@ -356,6 +360,111 @@ void leer_mobs(HashMap *mobs) {
     fclose(archivo);
 }
 
+/**********************************************/
+/*          Asignar mobs a escenarios         */
+/**********************************************/
+
+void asignar_mobs(HashMap * escenarios, HashMap * mobs){
+    for (Pair * esc = firstMap(escenarios); esc != NULL; esc = nextMap(escenarios)){
+        Escenarios * escenario = esc->value;
+
+        if (!escenario->Enemigos)
+            escenario->Enemigos = list_create();
+
+        for (Pair * par_mob = firstMap(mobs); par_mob != NULL; par_mob = nextMap(mobs)){
+            Enemigo * mob = par_mob->value;
+
+            if (strcmp(mob->dificultad, escenario->dificultad) == 0){
+                list_pushBack(escenario->Enemigos, mob);
+            }
+        }
+    }
+}
+
+Enemigo * seleccionarEnemigo(List * enemigos){
+    if(list_size(enemigos) == 0) return NULL;
+
+    int index = rand() % list_size(enemigos);
+
+    int i = 0;
+    for (Enemigo *mob = list_first(enemigos); mob != NULL; mob = list_next(enemigos)){
+        if (i == index){
+            Enemigo * seleccionado = malloc(sizeof(Enemigo));
+            *seleccionado = *mob;
+
+            Inventario * loot = malloc(sizeof(Inventario));
+
+            loot->armas = mob->item.armas;
+
+            loot->casco = mob->item.casco;
+            loot->pechera = mob->item.pechera;
+            loot->guantes = mob->item.guantes;
+            loot->pantalones = mob->item.pantalones;
+            loot->botas = mob->item.botas;
+
+            loot->pocion = list_create();
+            for (Pocion * p = list_first(mob->item.pocion); p != NULL; p = list_next(mob->item.pocion)){
+                Pocion * nueva = malloc(sizeof(Pocion));
+                *nueva = *p;
+                list_pushBack(loot->pocion, nueva);
+            }
+
+            seleccionado->item = *loot;
+            return seleccionado;
+        }
+        i++;
+    }
+    return NULL;
+}
+
+/**********************************************/
+/*              Crear al jugador              */
+/**********************************************/
+
+Jugador * createPlayer(char nombre[], HashMap * juego){
+    Jugador * player = (Jugador *)malloc(sizeof(Jugador));
+
+    strcpy(player->nombre, nombre);
+    Pair * inicio = firstMap(juego);
+    player->vida = 100;
+    //player->max_vida = 100;
+    player->estamina = 15;
+    //player->max_estamina = 15;
+    player->defensa = 100;
+    //player->max_defensa = 100;
+    player->ataque = 1;
+    player->experiencia = 0;
+    player->nivel = 0;
+    player->actual = inicio->value;
+    
+    strcpy(player->inventario.armas.nombre, "Sin arma");
+    player->inventario.armas.ataque = 0;
+    player->inventario.armas.durabilidad = 0;
+
+    Armadura vacia;
+    strcpy(vacia.nombre, "Sin armadura");
+    strcpy(vacia.tipo, "");
+    vacia.defensa = 0;
+    vacia.durabilidad = 0;
+    strcpy(vacia.bufo, "");
+    vacia.valor = 0;
+
+    player->inventario.casco = vacia;
+    player->inventario.pechera = vacia;
+    player->inventario.guantes = vacia;
+    player->inventario.pantalones = vacia;
+    player->inventario.botas = vacia;
+
+    player->inventario.pocion = list_create();
+
+    player->inmunidad = false;
+
+    return player;
+}
+
+/**********************************************/
+/*                   Mostrar                  */
+/**********************************************/
 
 void mostrar_mobs(HashMap *mobs) {
     Pair *pp = firstMap(mobs);
@@ -424,4 +533,207 @@ void mostrarMap(HashMap * juego){
         printf("ID: %s, Nombre: %s, Leyenda: %s, Dificultad: %s\n", e->id, e->nombre, e->leyenda, e->dificultad);
         printf("Arriba: %s, Abajo: %s, Izquierda: %s, Derecha: %s\n", e->id_arriba, e->id_abajo, e->id_izquierda, e->id_derecha);
     }
+}
+
+/**********************************************/
+/*               Ciclo de Pelea               */
+/**********************************************/
+
+bool usarPociones(Jugador * player){
+    limpiarPantalla();
+    if (list_size(player->inventario.pocion) == 0){
+        puts("No tienes pociones en el inventario.");
+        return true;
+    }
+    puts("=== POCIONES DISPONIBLES ===");
+
+    int index = 1;
+    List * temporal = list_create();
+
+    for (Pocion* p = list_first(player->inventario.pocion); p != NULL; p = list_next(player->inventario.pocion)){
+        printf("%d) %s - %s (+%d)\n", index, p->nombre, p->efecto, p->valor);
+        list_pushBack(temporal, p);
+        index++;
+    }
+    
+    printf("%d) Cancelar\n", index);
+    printf("Seleccione la opcion a usar: ");
+    int opcion;
+    scanf("%d", &opcion);
+
+    if (opcion >= index || opcion < 0){
+        puts("No se uso ninguna pocion.");
+        list_clean(temporal);
+        presioneTeclaParaContinuar();
+        return true;
+    }
+
+    int actual = 1;
+    Pocion *seleccionada = list_first(temporal);
+    while(seleccionada != NULL && actual < opcion){
+        seleccionada = list_next(temporal);
+        actual++;
+    }
+
+    printf("Usaste la pocion: %s\n", seleccionada->nombre);
+    if (strcmp(seleccionada->efecto, "Vida") == 0){
+        player->vida += seleccionada->valor;
+        if (player->vida > player->max_vida) player->vida = player->max_vida;
+        printf("Tu vida actual es: %d", player->vida);
+    }
+    else if (strcmp(seleccionada->efecto, "Inmunidad") == 0){
+        player->inmunidad = true;
+        puts("¡Ahora eres inmune temporalmente!");
+    }
+    else if (strcmp(seleccionada->efecto, "Escudo") == 0){
+        player->defensa += seleccionada->valor;
+        if (player->defensa > player->max_defensa) player->defensa = player->max_defensa;
+        printf("Tu defensa aumentó a: %d\n", player->defensa);
+    }
+    else if (strcmp(seleccionada->efecto, "Estamina") == 0){
+        player->estamina += seleccionada->valor;
+        if (player->estamina > player->max_estamina) player->estamina = player->max_estamina;
+        printf("Tu estamina actual es: %d\n", player->estamina);
+    }
+
+    List * nueva_lista = list_create();
+    for (Pocion* p = list_first(player->inventario.pocion); p != NULL; p = list_next(player->inventario.pocion)){
+        if (p != seleccionada){
+            list_pushBack(nueva_lista, p);
+        }
+        else{
+            free(p);
+        }
+    }
+    list_clean(player->inventario.pocion);
+    player->inventario.pocion = nueva_lista;
+
+    //popCurrent
+
+    list_clean(temporal);
+    presioneTeclaParaContinuar();
+
+    if(list_size(player->inventario.pocion) == 0){
+        puts("Te has quedado sin pociones");
+        presioneTeclaParaContinuar();
+        return false;
+    }
+    return false;
+}
+
+bool cicloPelea(Jugador * player, List * enemigos)
+{
+    Enemigo * enemigo = seleccionarEnemigo(enemigos); // Selecciona un enemigo de la lista proporcionada
+
+    //calcularDefensaActual(player);
+
+    bool EnemigoVivo = true; // Variable para controlar si el enemigo está activo
+    while(EnemigoVivo && player->vida > 0) {
+        limpiarPantalla();
+        printf("Jugador: %s | Vida: %d | Estamina: %d | Ataque: %d | Defensa: %d\n",
+            player->nombre, player->vida, player->estamina, player->ataque, player->defensa);
+        printf("Enemigo: %s | Vida: %d | Defensa: %d\n",
+            enemigo->nombre, enemigo->vida, enemigo->defensa);
+        
+        menuOpcionesPelea(); // Muestra el menú de opciones de pelea
+        bool repetirAccion = false; // Variable para controlar si se repite la acción
+        
+        char opcion;
+        printf("Seleccione una opción: ");
+        scanf(" %c", &opcion);
+
+        switch (opcion)
+        {
+        case '1':
+            enemigo->vida -= (player->ataque - enemigo->defensa); // El enemigo recibe daño del jugador
+            break;
+        case '2':
+            repetirAccion = usarPociones(player); // El jugador usa una poción
+            break;
+        case '3':
+            /* code */
+            break;
+        
+        default:
+            puts("Opción no válida, por favor intente de nuevo.");
+            repetirAccion = true; // Repite la acción si la opción no es válida
+            break;
+        }
+        if (repetirAccion) continue; // Si se repite la acción, vuelve al inicio del bucle
+        //if(opcion != '1' || opcion != '2'|| opcion != '3') continue;
+        player->vida -= (int) (enemigo->ataque/(player->defensa_total * 0.01)); // El jugador recibe daño del enemigo
+
+        // Simulación de acciones (esto debería ser reemplazado por la lógica real del juego)
+        // Por ejemplo:
+        // - El jugador ataca al enemigo
+        // - El enemigo ataca al jugador
+        // - Se verifica si alguno ha muerto
+        // - Se actualizan las estadísticas
+
+        // Simulación simple para continuar el ciclo
+        if (enemigo->vida <= 0) {
+            puts("El enemigo ha sido derrotado!");
+            EnemigoVivo = false; // El enemigo ya no está vivo
+        }
+        
+    }
+
+    if (player->vida <= 0) {
+        puts("El jugador ha sido derrotado!");
+        return false; // El jugador ha muerto
+    }
+
+    return true;
+}
+
+/**********************************************/
+/*             Seleccionar opcion             */
+/**********************************************/
+
+void seleccionOpcion(Jugador * player)
+{
+    bool jugadorVivo = true; // Variable para controlar si el jugador está activo
+    char op;
+    while(jugadorVivo)
+    {
+        //Se muestra el menú y se pide una opción
+        mostrarMenuJuego();
+        printf("INGRESE SU OPCION: ");
+        scanf(" %c", &op);
+
+        
+
+        //Se realizan las acciones según la opción seleccionada
+        switch (op) {
+            case '1':
+                //explorarZonas(); //FUNCIÓN PARA EXPLORAR LAS ZONAS
+
+                jugadorVivo = cicloPelea(player, player->actual->Enemigos); // Ciclo de pelea con los enemigos de la zona actual
+                break;
+            case '2':
+                //verEstado(); //FUNCIÓN PARA VER EL ESTADO DEL JUGADOR
+                break;
+            case '3':
+                //recolectarItems(); //FUNCIÓN PARA RECOLECTAR LOS ITEMS DE LA ZONA
+                break;
+            case '4':
+                //usarItem(); //FUNCIÓN PARA USAR LOS ITEMS
+                break;
+            case '5':
+                //equipar_DesequiparItem(); //FUNCIÓN PARA EQUIPAR Y DESEQUIPAR ITEMS
+                break;
+            case '6':
+                //atacar(); //FUNCIÓN PARA ATACAR A UN ENEMIGO
+                break;
+            case '7':
+                //verEnemigos(); //FUNCIÓN PARA VER LOS ENEMIGOS Y SUS ESTADÍSTICAS 
+                break;
+            case '8':   
+                return;
+            default:
+                printf("Opcion no valida.\n");
+                break;
+        }
+        presioneTeclaParaContinuar();
+    } // El bucle continuará mientras el jugador esté activo
 }
