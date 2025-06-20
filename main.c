@@ -83,22 +83,29 @@ typedef struct{
     Inventario item;
 }Enemigo;
 
+/**********************************************/
+/*                 Prototipado                */
+/**********************************************/
+
 void mostrarMenuPrincipal();
 void mostrarMenuJuego();
-
-void seleccionOpcion(Jugador * );
-
-bool cicloPelea(Jugador * , List * );
 void menuOpcionesPelea();
 
 void leer_escenarios(HashMap * );
-void mostrarMap(HashMap * );
 void leer_mobs(HashMap * );
-void mostrar_mobs(HashMap * );
 void asignar_mobs(HashMap * , HashMap * );
-
-Jugador * createPlayer(char * , HashMap * );
 Enemigo * seleccionarEnemigo(List * );
+Jugador * createPlayer(char * , HashMap * );
+
+void mostrar_mobs(HashMap * );
+void mostrarMap(HashMap * );
+
+bool cicloPelea(Jugador * , List * );
+void seleccionOpcion(Jugador * );
+
+/**********************************************/
+/*                    Main                    */
+/**********************************************/
 
 int main(){
     HashMap *juego = createMap(100); // Crea un HashMap para almacenar los escenarios
@@ -162,6 +169,11 @@ int main(){
     return 0;
 }
 
+/**********************************************/
+/*               Mostrar menus                */
+/**********************************************/
+
+
 void mostrarMenuPrincipal() {
     limpiarPantalla();
     puts("========================================");
@@ -188,53 +200,20 @@ void mostrarMenuJuego(){
     puts("5) SALIR AL MENU PRINCIPAL");
 }
 
-void seleccionOpcion(Jugador * player)
+void menuOpcionesPelea()
 {
-    bool jugadorVivo = true; // Variable para controlar si el jugador está activo
-    char op;
-    while(jugadorVivo)
-    {
-        //Se muestra el menú y se pide una opción
-        mostrarMenuJuego();
-        printf("INGRESE SU OPCION: ");
-        scanf(" %c", &op);
-
-        
-
-        //Se realizan las acciones según la opción seleccionada
-        switch (op) {
-            case '1':
-                //explorarZonas(); //FUNCIÓN PARA EXPLORAR LAS ZONAS
-
-                jugadorVivo = cicloPelea(player, player->actual->Enemigos); // Ciclo de pelea con los enemigos de la zona actual
-                break;
-            case '2':
-                //verEstado(); //FUNCIÓN PARA VER EL ESTADO DEL JUGADOR
-                break;
-            case '3':
-                //recolectarItems(); //FUNCIÓN PARA RECOLECTAR LOS ITEMS DE LA ZONA
-                break;
-            case '4':
-                //usarItem(); //FUNCIÓN PARA USAR LOS ITEMS
-                break;
-            case '5':
-                //equipar_DesequiparItem(); //FUNCIÓN PARA EQUIPAR Y DESEQUIPAR ITEMS
-                break;
-            case '6':
-                //atacar(); //FUNCIÓN PARA ATACAR A UN ENEMIGO
-                break;
-            case '7':
-                //verEnemigos(); //FUNCIÓN PARA VER LOS ENEMIGOS Y SUS ESTADÍSTICAS 
-                break;
-            case '8':   
-                return;
-            default:
-                printf("Opcion no valida.\n");
-                break;
-        }
-        presioneTeclaParaContinuar();
-    } // El bucle continuará mientras el jugador esté activo
+    puts("========================================");
+    puts("               PELEA                   ");
+    puts("========================================");
+    puts("1) Atacar al enemigo");
+    puts("2) Usar poción");
+    puts("3) Huir de la pelea");
+    puts("=========================================");
 }
+
+/**********************************************/
+/*                  Leer CSVs                 */
+/**********************************************/
 
 void leer_escenarios(HashMap * juego){
     FILE *archivo = fopen("data/mapa.csv", "r");
@@ -376,6 +355,106 @@ void leer_mobs(HashMap *mobs) {
     fclose(archivo);
 }
 
+/**********************************************/
+/*          Asignar mobs a escenarios         */
+/**********************************************/
+
+void asignar_mobs(HashMap * escenarios, HashMap * mobs){
+    for (Pair * esc = firstMap(escenarios); esc != NULL; esc = nextMap(escenarios)){
+        Escenarios * escenario = esc->value;
+
+        if (!escenario->Enemigos)
+            escenario->Enemigos = list_create();
+
+        for (Pair * par_mob = firstMap(mobs); par_mob != NULL; par_mob = nextMap(mobs)){
+            Enemigo * mob = par_mob->value;
+
+            if (strcmp(mob->dificultad, escenario->dificultad) == 0){
+                list_pushBack(escenario->Enemigos, mob);
+            }
+        }
+    }
+}
+
+Enemigo * seleccionarEnemigo(List * enemigos){
+    if(list_size(enemigos) == 0) return NULL;
+
+    int index = rand() % list_size(enemigos);
+
+    int i = 0;
+    for (Enemigo *mob = list_first(enemigos); mob != NULL; mob = list_next(enemigos)){
+        if (i == index){
+            Enemigo * seleccionado = malloc(sizeof(Enemigo));
+            *seleccionado = *mob;
+
+            Inventario * loot = malloc(sizeof(Inventario));
+
+            loot->armas = mob->item.armas;
+
+            loot->casco = mob->item.casco;
+            loot->pechera = mob->item.pechera;
+            loot->guantes = mob->item.guantes;
+            loot->pantalones = mob->item.pantalones;
+            loot->botas = mob->item.botas;
+
+            loot->pocion = list_create();
+            for (Pocion * p = list_first(mob->item.pocion); p != NULL; p = list_next(mob->item.pocion)){
+                Pocion * nueva = malloc(sizeof(Pocion));
+                *nueva = *p;
+                list_pushBack(loot->pocion, nueva);
+            }
+
+            seleccionado->item = *loot;
+            return seleccionado;
+        }
+        i++;
+    }
+    return NULL;
+}
+
+/**********************************************/
+/*              Crear al jugador              */
+/**********************************************/
+
+Jugador * createPlayer(char nombre[], HashMap * juego){
+    Jugador * player = (Jugador *)malloc(sizeof(Jugador));
+
+    strcpy(player->nombre, nombre);
+    Pair * inicio = firstMap(juego);
+    player->vida = 100;
+    player->estamina = 15;
+    player->defensa = 100;
+    player->ataque = 1;
+    player->experiencia = 0;
+    player->nivel = 0;
+    player->actual = inicio->value;
+    
+    strcpy(player->inventario.armas.nombre, "Sin arma");
+    player->inventario.armas.ataque = 0;
+    player->inventario.armas.durabilidad = 0;
+
+    Armadura vacia;
+    strcpy(vacia.nombre, "Sin armadura");
+    strcpy(vacia.tipo, "");
+    vacia.defensa = 0;
+    vacia.durabilidad = 0;
+    strcpy(vacia.bufo, "");
+    vacia.valor = 0;
+
+    player->inventario.casco = vacia;
+    player->inventario.pechera = vacia;
+    player->inventario.guantes = vacia;
+    player->inventario.pantalones = vacia;
+    player->inventario.botas = vacia;
+
+    player->inventario.pocion = list_create();
+
+    return player;
+}
+
+/**********************************************/
+/*                   Mostrar                  */
+/**********************************************/
 
 void mostrar_mobs(HashMap *mobs) {
     Pair *pp = firstMap(mobs);
@@ -446,41 +525,9 @@ void mostrarMap(HashMap * juego){
     }
 }
 
-Jugador * createPlayer(char nombre[], HashMap * juego){
-    Jugador * player = (Jugador *)malloc(sizeof(Jugador));
-
-    strcpy(player->nombre, nombre);
-    Pair * inicio = firstMap(juego);
-    player->vida = 100;
-    player->estamina = 15;
-    player->defensa = 100;
-    player->ataque = 1;
-    player->experiencia = 0;
-    player->nivel = 0;
-    player->actual = inicio->value;
-    
-    strcpy(player->inventario.armas.nombre, "Sin arma");
-    player->inventario.armas.ataque = 0;
-    player->inventario.armas.durabilidad = 0;
-
-    Armadura vacia;
-    strcpy(vacia.nombre, "Sin armadura");
-    strcpy(vacia.tipo, "");
-    vacia.defensa = 0;
-    vacia.durabilidad = 0;
-    strcpy(vacia.bufo, "");
-    vacia.valor = 0;
-
-    player->inventario.casco = vacia;
-    player->inventario.pechera = vacia;
-    player->inventario.guantes = vacia;
-    player->inventario.pantalones = vacia;
-    player->inventario.botas = vacia;
-
-    player->inventario.pocion = list_create();
-
-    return player;
-}
+/**********************************************/
+/*               Ciclo de Pelea               */
+/**********************************************/
 
 bool cicloPelea(Jugador * player, List * enemigos)
 {
@@ -544,66 +591,54 @@ bool cicloPelea(Jugador * player, List * enemigos)
     return true;
 }
 
-void menuOpcionesPelea()
+/**********************************************/
+/*             Seleccionar opcion             */
+/**********************************************/
+
+void seleccionOpcion(Jugador * player)
 {
-    puts("========================================");
-    puts("               PELEA                   ");
-    puts("========================================");
-    puts("1) Atacar al enemigo");
-    puts("2) Usar poción");
-    puts("3) Huir de la pelea");
-    puts("=========================================");
-}
+    bool jugadorVivo = true; // Variable para controlar si el jugador está activo
+    char op;
+    while(jugadorVivo)
+    {
+        //Se muestra el menú y se pide una opción
+        mostrarMenuJuego();
+        printf("INGRESE SU OPCION: ");
+        scanf(" %c", &op);
 
-void asignar_mobs(HashMap * escenarios, HashMap * mobs){
-    for (Pair * esc = firstMap(escenarios); esc != NULL; esc = nextMap(escenarios)){
-        Escenarios * escenario = esc->value;
+        
 
-        if (!escenario->Enemigos)
-            escenario->Enemigos = list_create();
+        //Se realizan las acciones según la opción seleccionada
+        switch (op) {
+            case '1':
+                //explorarZonas(); //FUNCIÓN PARA EXPLORAR LAS ZONAS
 
-        for (Pair * par_mob = firstMap(mobs); par_mob != NULL; par_mob = nextMap(mobs)){
-            Enemigo * mob = par_mob->value;
-
-            if (strcmp(mob->dificultad, escenario->dificultad) == 0){
-                list_pushBack(escenario->Enemigos, mob);
-            }
+                jugadorVivo = cicloPelea(player, player->actual->Enemigos); // Ciclo de pelea con los enemigos de la zona actual
+                break;
+            case '2':
+                //verEstado(); //FUNCIÓN PARA VER EL ESTADO DEL JUGADOR
+                break;
+            case '3':
+                //recolectarItems(); //FUNCIÓN PARA RECOLECTAR LOS ITEMS DE LA ZONA
+                break;
+            case '4':
+                //usarItem(); //FUNCIÓN PARA USAR LOS ITEMS
+                break;
+            case '5':
+                //equipar_DesequiparItem(); //FUNCIÓN PARA EQUIPAR Y DESEQUIPAR ITEMS
+                break;
+            case '6':
+                //atacar(); //FUNCIÓN PARA ATACAR A UN ENEMIGO
+                break;
+            case '7':
+                //verEnemigos(); //FUNCIÓN PARA VER LOS ENEMIGOS Y SUS ESTADÍSTICAS 
+                break;
+            case '8':   
+                return;
+            default:
+                printf("Opcion no valida.\n");
+                break;
         }
-    }
-}
-
-Enemigo * seleccionarEnemigo(List * enemigos){
-    if(list_size(enemigos) == 0) return NULL;
-
-    int index = rand() % list_size(enemigos);
-
-    int i = 0;
-    for (Enemigo *mob = list_first(enemigos); mob != NULL; mob = list_next(enemigos)){
-        if (i == index){
-            Enemigo * seleccionado = malloc(sizeof(Enemigo));
-            *seleccionado = *mob;
-
-            Inventario * loot = malloc(sizeof(Inventario));
-
-            loot->armas = mob->item.armas;
-
-            loot->casco = mob->item.casco;
-            loot->pechera = mob->item.pechera;
-            loot->guantes = mob->item.guantes;
-            loot->pantalones = mob->item.pantalones;
-            loot->botas = mob->item.botas;
-
-            loot->pocion = list_create();
-            for (Pocion * p = list_first(mob->item.pocion); p != NULL; p = list_next(mob->item.pocion)){
-                Pocion * nueva = malloc(sizeof(Pocion));
-                *nueva = *p;
-                list_pushBack(loot->pocion, nueva);
-            }
-
-            seleccionado->item = *loot;
-            return seleccionado;
-        }
-        i++;
-    }
-    return NULL;
+        presioneTeclaParaContinuar();
+    } // El bucle continuará mientras el jugador esté activo
 }
