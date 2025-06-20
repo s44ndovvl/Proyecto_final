@@ -104,7 +104,7 @@ Jugador * createPlayer(char * , HashMap * );
 void mostrar_mobs(HashMap * );
 void mostrarMap(HashMap * );
 
-void usarPociones(Jugador * );
+bool usarPociones(Jugador * );
 bool cicloPelea(Jugador * , List * );
 void seleccionOpcion(Jugador * );
 
@@ -539,11 +539,11 @@ void mostrarMap(HashMap * juego){
 /*               Ciclo de Pelea               */
 /**********************************************/
 
-void usarPociones(Jugador * player){
+bool usarPociones(Jugador * player){
     limpiarPantalla();
     if (list_size(player->inventario.pocion == 0)){
         puts("No tienes pociones en el inventario.");
-        return;
+        return true;
     }
     puts("=== POCIONES DISPONIBLES ===");
 
@@ -565,7 +565,7 @@ void usarPociones(Jugador * player){
         puts("No se uso ninguna pocion.");
         list_clean(temporal);
         presioneTeclaParaContinuar();
-        return;
+        return true;
     }
 
     int actual = 1;
@@ -608,14 +608,17 @@ void usarPociones(Jugador * player){
     list_clean(player->inventario.pocion);
     player->inventario.pocion = nueva_lista;
 
+    //popCurrent
+
     list_clean(temporal);
     presioneTeclaParaContinuar();
 
     if(list_size(player->inventario.pocion) == 0){
         puts("Te has quedado sin pociones");
         presioneTeclaParaContinuar();
-        return;
+        return false;
     }
+    return false;
 }
 
 bool cicloPelea(Jugador * player, List * enemigos)
@@ -633,6 +636,7 @@ bool cicloPelea(Jugador * player, List * enemigos)
             enemigo->nombre, enemigo->vida, enemigo->defensa);
         
         menuOpcionesPelea(); // Muestra el menú de opciones de pelea
+        bool repetirAccion = false; // Variable para controlar si se repite la acción
         
         char opcion;
         printf("Seleccione una opción: ");
@@ -644,7 +648,7 @@ bool cicloPelea(Jugador * player, List * enemigos)
             enemigo->vida -= (player->ataque - enemigo->defensa); // El enemigo recibe daño del jugador
             break;
         case '2':
-            /* code */
+            repetirAccion = usarPociones(player); // El jugador usa una poción
             break;
         case '3':
             /* code */
@@ -652,8 +656,10 @@ bool cicloPelea(Jugador * player, List * enemigos)
         
         default:
             puts("Opción no válida, por favor intente de nuevo.");
-            continue;
+            repetirAccion = true; // Repite la acción si la opción no es válida
+            break;
         }
+        if (repetirAccion) continue; // Si se repite la acción, vuelve al inicio del bucle
         //if(opcion != '1' || opcion != '2'|| opcion != '3') continue;
         player->vida -= (int) (enemigo->ataque/(player->defensa_total * 0.01)); // El jugador recibe daño del enemigo
 
