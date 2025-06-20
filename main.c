@@ -63,14 +63,18 @@ struct Escenarios{
 typedef struct{
     char nombre[50];
     int vida;
+    //int max_vida;
     int estamina;
+    //int max_estamina;
     int defensa;
+    //int max_defensa;
     int defensa_total;
     int ataque;
     int experiencia;
     int nivel;
     Escenarios *actual;
     Inventario inventario;
+    bool inmunidad;
 }Jugador;
 
 typedef struct{
@@ -422,8 +426,11 @@ Jugador * createPlayer(char nombre[], HashMap * juego){
     strcpy(player->nombre, nombre);
     Pair * inicio = firstMap(juego);
     player->vida = 100;
+    //player->max_vida = 100;
     player->estamina = 15;
+    //player->max_estamina = 15;
     player->defensa = 100;
+    //player->max_defensa = 100;
     player->ataque = 1;
     player->experiencia = 0;
     player->nivel = 0;
@@ -448,6 +455,8 @@ Jugador * createPlayer(char nombre[], HashMap * juego){
     player->inventario.botas = vacia;
 
     player->inventario.pocion = list_create();
+
+    player->inmunidad = false;
 
     return player;
 }
@@ -528,6 +537,88 @@ void mostrarMap(HashMap * juego){
 /**********************************************/
 /*               Ciclo de Pelea               */
 /**********************************************/
+
+void usarPociones(Jugador * player){
+    limpiarPantalla();
+    if (list_size(player->inventario.pocion == 0)){
+        puts("No tienes pociones en el inventario.");
+        return;
+    }
+    puts("=== POCIONES DISPONIBLES ===");
+
+    int index = 1;
+    List * temporal = list_create();
+
+    for (Pocion* p = list_first(player->inventario.pocion); p != NULL; p = list_next(player->inventario.pocion)){
+        printf("%d) %s - %s (+%d)\n", index, p->nombre, p->efecto, p->valor);
+        list_pushBack(temporal, p);
+        index++;
+    }
+    
+    printf("%d) Cancelar\n", index);
+    printf("Seleccione la opcion a usar: ");
+    int opcion;
+    scanf("%d", &opcion);
+
+    if (opcion >= index || opcion < 0){
+        puts("No se uso ninguna pocion.");
+        list_clean(temporal);
+        presioneTeclaParaContinuar();
+        return;
+    }
+
+    int actual = 1;
+    Pocion *seleccionada = list_first(temporal);
+    while(seleccionada != NULL && actual < opcion){
+        seleccionada = list_next(temporal);
+        actual++;
+    }
+
+    printf("Usaste la pocion: %s\n", seleccionada->nombre);
+    if (strcmp(seleccionada->efecto, "Vida") == 0){
+        player->vida += seleccionada->valor;
+        if (player->vida > 100) player->vida = 100;
+        //if (player->vida > player->max_vida) player->vida = player->max_vida;
+        printf("Tu vida actual es: %d", player->vida);
+    }
+    else if (strcmp(seleccionada->efecto, "Inmunidad") == 0){
+        player->inmunidad = true;
+        puts("¡Ahora eres inmune temporalmente!");
+    }
+    else if (strcmp(seleccionada->efecto, "Escudo") == 0){
+        player->defensa += seleccionada->valor;
+        if (player->defensa > 100) player->defensa = 100;
+        //if (player->defensa > player->max_defensa) player->defensa = player->max_defensa;
+        printf("Tu defensa aumentó a: %d\n", player->defensa);
+    }
+    else if (strcmp(seleccionada->efecto, "Estamina") == 0){
+        player->estamina += seleccionada->valor;
+        if (player->estamina > 15) player->estamina = 15;
+        //if (player->estamina > player->max_estamina) player->estamina = player->max_estamina;
+        printf("Tu estamina actual es: %d\n", player->estamina);
+    }
+
+    List * nueva_lista = list_create();
+    for (Pocion* p = list_first(player->inventario.pocion); p != NULL; p = list_next(player->inventario.pocion)){
+        if (p != seleccionada){
+            list_pushBack(nueva_lista, p);
+        }
+        else{
+            free(p);
+        }
+    }
+    list_clean(player->inventario.pocion);
+    player->inventario.pocion = nueva_lista;
+
+    list_clean(temporal);
+    presioneTeclaParaContinuar();
+
+    if(list_size(player->inventario.pocion) == 0){
+        puts("Te has quedado sin pociones");
+        presioneTeclaParaContinuar();
+        return;
+    }
+}
 
 bool cicloPelea(Jugador * player, List * enemigos)
 {
