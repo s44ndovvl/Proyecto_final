@@ -63,11 +63,11 @@ struct Escenarios{
 typedef struct{
     char nombre[50];
     int vida;
-    //int max_vida;
+    int max_vida;
     int estamina;
-    //int max_estamina;
+    int max_estamina;
     int defensa;
-    //int max_defensa;
+    int max_defensa;
     int defensa_total;
     int ataque;
     int experiencia;
@@ -104,6 +104,7 @@ Jugador * createPlayer(char * , HashMap * );
 void mostrar_mobs(HashMap * );
 void mostrarMap(HashMap * );
 
+void usarPociones(Jugador * );
 bool cicloPelea(Jugador * , List * );
 void seleccionOpcion(Jugador * );
 
@@ -577,8 +578,7 @@ void usarPociones(Jugador * player){
     printf("Usaste la pocion: %s\n", seleccionada->nombre);
     if (strcmp(seleccionada->efecto, "Vida") == 0){
         player->vida += seleccionada->valor;
-        if (player->vida > 100) player->vida = 100;
-        //if (player->vida > player->max_vida) player->vida = player->max_vida;
+        if (player->vida > player->max_vida) player->vida = player->max_vida;
         printf("Tu vida actual es: %d", player->vida);
     }
     else if (strcmp(seleccionada->efecto, "Inmunidad") == 0){
@@ -587,14 +587,12 @@ void usarPociones(Jugador * player){
     }
     else if (strcmp(seleccionada->efecto, "Escudo") == 0){
         player->defensa += seleccionada->valor;
-        if (player->defensa > 100) player->defensa = 100;
-        //if (player->defensa > player->max_defensa) player->defensa = player->max_defensa;
+        if (player->defensa > player->max_defensa) player->defensa = player->max_defensa;
         printf("Tu defensa aumentó a: %d\n", player->defensa);
     }
     else if (strcmp(seleccionada->efecto, "Estamina") == 0){
         player->estamina += seleccionada->valor;
-        if (player->estamina > 15) player->estamina = 15;
-        //if (player->estamina > player->max_estamina) player->estamina = player->max_estamina;
+        if (player->estamina > player->max_estamina) player->estamina = player->max_estamina;
         printf("Tu estamina actual es: %d\n", player->estamina);
     }
 
