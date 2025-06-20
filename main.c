@@ -90,6 +90,9 @@ void leer_escenarios(HashMap * );
 void mostrarMap(HashMap * );
 void leer_mobs(HashMap * );
 void mostrar_mobs(HashMap * );
+void lvlup(Jugador *);
+void movermeDeEscenario(Jugador *);
+
 
 int main(){
     HashMap *juego = createMap(100); // Crea un HashMap para almacenar los escenarios
@@ -424,4 +427,83 @@ void mostrarMap(HashMap * juego){
         printf("ID: %s, Nombre: %s, Leyenda: %s, Dificultad: %s\n", e->id, e->nombre, e->leyenda, e->dificultad);
         printf("Arriba: %s, Abajo: %s, Izquierda: %s, Derecha: %s\n", e->id_arriba, e->id_abajo, e->id_izquierda, e->id_derecha);
     }
+}
+
+void lvlup(Jugador *jugador) {
+    jugador->nivel++;
+    jugador->vida += 5; // Incrementa la vida al subir de nivel
+    jugador->ataque += 2; // Incrementa el ataque al subir de nivel
+    jugador->defensa += 1; // Incrementa la defensa al subir de nivel
+    printf("¡Felicidades! Has subido al nivel %d.\n", jugador->nivel);
+}
+
+void movermeDeEscenario(Jugador *jugador)
+{
+    char direccion;
+    int movimiento = 0;
+
+    do {
+        limpiarPantalla();
+        printf("Estás en: %s\n", jugador->actual->nombre);
+        printf("¿A dónde deseas moverte?\n");
+
+        if (jugador->actual->arriba)
+            printf("  Arriba (w): %s\n", jugador->actual->arriba->nombre);
+        if (jugador->actual->abajo)
+            printf("  Abajo (s): %s\n", jugador->actual->abajo->nombre);
+        if (jugador->actual->izquierda)
+            printf("  Izquierda (a): %s\n", jugador->actual->izquierda->nombre);
+        if (jugador->actual->derecha)
+            printf("  Derecha (d): %s\n", jugador->actual->derecha->nombre);
+
+        printf("\nSolo se muestran las direcciones disponibles.\n");
+        printf("Ingrese dirección (w/a/s/d): ");
+        scanf(" %c", &direccion);
+
+        switch (direccion) {
+            case 'w':
+                if (jugador->actual->arriba) {
+                    jugador->actual = jugador->actual->arriba;
+                    movimiento = 1;
+                } else {
+                    printf("No puedes moverte en esa dirección.\n");
+                }
+                break;
+            case 'a':
+                if (jugador->actual->izquierda) {
+                    jugador->actual = jugador->actual->izquierda;
+                    movimiento = 1;
+                } else {
+                    printf("No puedes moverte en esa dirección.\n");
+                }
+                break;
+            case 's':
+                if (jugador->actual->abajo) {
+                    jugador->actual = jugador->actual->abajo;
+                    movimiento = 1;
+                } else {
+                    printf("No puedes moverte en esa dirección.\n");
+                }
+                break;
+            case 'd':
+                if (jugador->actual->derecha) {
+                    jugador->actual = jugador->actual->derecha;
+                    movimiento = 1;
+                } else {
+                    printf("No puedes moverte en esa dirección.\n");
+                }
+                break;
+            default:
+                printf("Dirección inválida. Intenta nuevamente.\n");
+                break;
+        }
+
+        if (!movimiento) {
+            presioneTeclaParaContinuar();
+        }
+
+    } while (!movimiento);
+
+    printf("Te has movido a: %s\n", jugador->actual->nombre);
+    presioneTeclaParaContinuar();
 }
