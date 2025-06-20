@@ -105,8 +105,10 @@ void mostrar_mobs(HashMap * );
 void mostrarMap(HashMap * );
 
 bool usarPociones(Jugador * );
+bool calcularHuida(Jugador * , Enemigo * );
 bool cicloPelea(Jugador * , List * );
 void seleccionOpcion(Jugador * );
+
 
 /**********************************************/
 /*                    Main                    */
@@ -621,6 +623,36 @@ bool usarPociones(Jugador * player){
     return false;
 }
 
+bool calcularHuida(Jugador * player, Enemigo * enemigo)
+{
+    int probabilidad = rand() % 100; // Genera un número aleatorio entre 0 y 99
+    int probDificultad = 0;
+    if(strcmp(enemigo->dificultad, "Facil") == 0) {
+        probDificultad = 60; // 60% de probabilidad de huir
+    } 
+    else if(strcmp(enemigo->dificultad, "Medio") == 0) {
+        probDificultad = 40; // 40% de probabilidad de huir
+    } 
+    else if(strcmp(enemigo->dificultad, "Dificil") == 0) {
+        probDificultad = 20; // 20% de probabilidad de huir
+    }
+    else if(strcmp(enemigo->dificultad, "Boss") == 0){
+        printf("El boss se dio cuenta de tu intento de huida cobarde y te castiga.\n");
+        printf("Tu elejiste este camino, ya no puedes huir de tu destino.\n");
+        return false;
+    }
+    int umbral = probDificultad - (enemigo->vida / 10); // Ajusta la probabilidad de huida según la vida del enemigo
+    
+    if (probabilidad < umbral) {
+        puts("¡Has huido exitosamente de la pelea!");
+        return true; // El jugador ha huido exitosamente
+    } else {
+        puts("No has logrado huir de la pelea.");
+        return false; // El jugador no ha podido huir
+    }
+
+}
+
 bool cicloPelea(Jugador * player, List * enemigos)
 {
     Enemigo * enemigo = seleccionarEnemigo(enemigos); // Selecciona un enemigo de la lista proporcionada
@@ -651,7 +683,7 @@ bool cicloPelea(Jugador * player, List * enemigos)
             repetirAccion = usarPociones(player); // El jugador usa una poción
             break;
         case '3':
-            /* code */
+            if(calcularHuida(player, enemigo)) return true;
             break;
         
         default:
@@ -661,16 +693,7 @@ bool cicloPelea(Jugador * player, List * enemigos)
         }
         if (repetirAccion) continue; // Si se repite la acción, vuelve al inicio del bucle
         //if(opcion != '1' || opcion != '2'|| opcion != '3') continue;
-        player->vida -= (int) (enemigo->ataque/(player->defensa_total * 0.01)); // El jugador recibe daño del enemigo
-
-        // Simulación de acciones (esto debería ser reemplazado por la lógica real del juego)
-        // Por ejemplo:
-        // - El jugador ataca al enemigo
-        // - El enemigo ataca al jugador
-        // - Se verifica si alguno ha muerto
-        // - Se actualizan las estadísticas
-
-        // Simulación simple para continuar el ciclo
+        player->vida -= (int) (enemigo->ataque/(player->defensa_total * 0.01));
         if (enemigo->vida <= 0) {
             puts("El enemigo ha sido derrotado!");
             EnemigoVivo = false; // El enemigo ya no está vivo
