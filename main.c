@@ -105,10 +105,8 @@ void mostrar_mobs(HashMap * );
 void mostrarMap(HashMap * );
 
 bool usarPociones(Jugador * );
-bool calcularHuida(Jugador * , Enemigo * );
 bool cicloPelea(Jugador * , List * );
 void seleccionOpcion(Jugador * );
-
 
 /**********************************************/
 /*                    Main                    */
@@ -370,8 +368,7 @@ void asignar_mobs(HashMap * escenarios, HashMap * mobs){
     for (Pair * esc = firstMap(escenarios); esc != NULL; esc = nextMap(escenarios)){
         Escenarios * escenario = esc->value;
 
-        if (!escenario->Enemigos)
-            escenario->Enemigos = list_create();
+        escenario->Enemigos = list_create();
 
         for (Pair * par_mob = firstMap(mobs); par_mob != NULL; par_mob = nextMap(mobs)){
             Enemigo * mob = par_mob->value;
@@ -384,25 +381,39 @@ void asignar_mobs(HashMap * escenarios, HashMap * mobs){
 }
 
 Enemigo * seleccionarEnemigo(List * enemigos){
-    if(list_size(enemigos) == 0) return NULL;
+    if(enemigos == NULL){
+        return NULL;
+    }
 
-    int index = rand() % list_size(enemigos);
+    int num_enemigos = 0;
+    for (Enemigo *mob = list_first(enemigos); mob != NULL; mob = list_next(enemigos)){
+        num_enemigos++;
+    }
+    if (num_enemigos == 0) {
+        return NULL; // No enemies to select, so return NULL
+    }
+    int index = rand() % num_enemigos;
 
     int i = 0;
     for (Enemigo *mob = list_first(enemigos); mob != NULL; mob = list_next(enemigos)){
         if (i == index){
             Enemigo * seleccionado = malloc(sizeof(Enemigo));
-            *seleccionado = *mob;
+            strcpy(seleccionado->nombre, mob->nombre);
+            strcpy(seleccionado->dificultad, mob->dificultad);
+
+            seleccionado->vida = mob->vida;
+            seleccionado->defensa = mob->defensa;
+            seleccionado->ataque = mob->ataque;
+            seleccionado->exp_dada = mob->exp_dada;
 
             Inventario * loot = malloc(sizeof(Inventario));
 
-            loot->armas = mob->item.armas;
-
-            loot->casco = mob->item.casco;
-            loot->pechera = mob->item.pechera;
-            loot->guantes = mob->item.guantes;
-            loot->pantalones = mob->item.pantalones;
-            loot->botas = mob->item.botas;
+            seleccionado->item.armas = mob->item.armas;
+            seleccionado->item.casco = mob->item.casco;
+            seleccionado->item.guantes = mob->item.guantes;
+            seleccionado->item.pechera = mob->item.pechera;
+            seleccionado->item.pantalones = mob->item.pantalones;
+            seleccionado->item.botas = mob->item.botas;
 
             loot->pocion = list_create();
             for (Pocion * p = list_first(mob->item.pocion); p != NULL; p = list_next(mob->item.pocion)){
@@ -411,7 +422,6 @@ Enemigo * seleccionarEnemigo(List * enemigos){
                 list_pushBack(loot->pocion, nueva);
             }
 
-            seleccionado->item = *loot;
             return seleccionado;
         }
         i++;
@@ -429,11 +439,11 @@ Jugador * createPlayer(char nombre[], HashMap * juego){
     strcpy(player->nombre, nombre);
     Pair * inicio = firstMap(juego);
     player->vida = 100;
-    //player->max_vida = 100;
+    player->max_vida = 100;
     player->estamina = 15;
-    //player->max_estamina = 15;
+    player->max_estamina = 15;
     player->defensa = 100;
-    //player->max_defensa = 100;
+    player->max_defensa = 100;
     player->ataque = 1;
     player->experiencia = 0;
     player->nivel = 0;
@@ -623,41 +633,16 @@ bool usarPociones(Jugador * player){
     return false;
 }
 
-bool calcularHuida(Jugador * player, Enemigo * enemigo)
-{
-    int probabilidad = rand() % 100; // Genera un número aleatorio entre 0 y 99
-    int probDificultad = 0;
-    if(strcmp(enemigo->dificultad, "Facil") == 0) {
-        probDificultad = 60; // 60% de probabilidad de huir
-    } 
-    else if(strcmp(enemigo->dificultad, "Medio") == 0) {
-        probDificultad = 40; // 40% de probabilidad de huir
-    } 
-    else if(strcmp(enemigo->dificultad, "Dificil") == 0) {
-        probDificultad = 20; // 20% de probabilidad de huir
-    }
-    else if(strcmp(enemigo->dificultad, "Boss") == 0){
-        printf("El boss se dio cuenta de tu intento de huida cobarde y te castiga.\n");
-        printf("Tu elejiste este camino, ya no puedes huir de tu destino.\n");
-        return false;
-    }
-    int umbral = probDificultad - (enemigo->vida / 10); // Ajusta la probabilidad de huida según la vida del enemigo
-    
-    if (probabilidad < umbral) {
-        puts("¡Has huido exitosamente de la pelea!");
-        return true; // El jugador ha huido exitosamente
-    } else {
-        puts("No has logrado huir de la pelea.");
-        return false; // El jugador no ha podido huir
-    }
-
-}
-
 bool cicloPelea(Jugador * player, List * enemigos)
 {
     Enemigo * enemigo = seleccionarEnemigo(enemigos); // Selecciona un enemigo de la lista proporcionada
 
     //calcularDefensaActual(player);
+    if (enemigo == NULL) {
+        printf("No se encontró ningún enemigo para pelear en esta zona.\n");
+        presioneTeclaParaContinuar(); // Pausa para que el usuario lea el mensaje
+        return true; // El jugador sigue vivo, pero no hubo pelea.
+    }
 
     bool EnemigoVivo = true; // Variable para controlar si el enemigo está activo
     while(EnemigoVivo && player->vida > 0) {
@@ -683,7 +668,7 @@ bool cicloPelea(Jugador * player, List * enemigos)
             repetirAccion = usarPociones(player); // El jugador usa una poción
             break;
         case '3':
-            if(calcularHuida(player, enemigo)) return true;
+            /* code */
             break;
         
         default:
@@ -693,7 +678,16 @@ bool cicloPelea(Jugador * player, List * enemigos)
         }
         if (repetirAccion) continue; // Si se repite la acción, vuelve al inicio del bucle
         //if(opcion != '1' || opcion != '2'|| opcion != '3') continue;
-        player->vida -= (int) (enemigo->ataque/(player->defensa_total * 0.01));
+        player->vida -= (int) (enemigo->ataque/(player->defensa_total * 0.01)); // El jugador recibe daño del enemigo
+
+        // Simulación de acciones (esto debería ser reemplazado por la lógica real del juego)
+        // Por ejemplo:
+        // - El jugador ataca al enemigo
+        // - El enemigo ataca al jugador
+        // - Se verifica si alguno ha muerto
+        // - Se actualizan las estadísticas
+
+        // Simulación simple para continuar el ciclo
         if (enemigo->vida <= 0) {
             puts("El enemigo ha sido derrotado!");
             EnemigoVivo = false; // El enemigo ya no está vivo
@@ -730,8 +724,6 @@ void seleccionOpcion(Jugador * player)
         switch (op) {
             case '1':
                 //explorarZonas(); //FUNCIÓN PARA EXPLORAR LAS ZONAS
-
-                jugadorVivo = cicloPelea(player, player->actual->Enemigos); // Ciclo de pelea con los enemigos de la zona actual
                 break;
             case '2':
                 //verEstado(); //FUNCIÓN PARA VER EL ESTADO DEL JUGADOR
@@ -740,18 +732,10 @@ void seleccionOpcion(Jugador * player)
                 //recolectarItems(); //FUNCIÓN PARA RECOLECTAR LOS ITEMS DE LA ZONA
                 break;
             case '4':
-                //usarItem(); //FUNCIÓN PARA USAR LOS ITEMS
+                jugadorVivo = cicloPelea(player, player->actual->Enemigos); // Ciclo de pelea con los enemigos de la zona actual
                 break;
             case '5':
                 //equipar_DesequiparItem(); //FUNCIÓN PARA EQUIPAR Y DESEQUIPAR ITEMS
-                break;
-            case '6':
-                //atacar(); //FUNCIÓN PARA ATACAR A UN ENEMIGO
-                break;
-            case '7':
-                //verEnemigos(); //FUNCIÓN PARA VER LOS ENEMIGOS Y SUS ESTADÍSTICAS 
-                break;
-            case '8':   
                 return;
             default:
                 printf("Opcion no valida.\n");
