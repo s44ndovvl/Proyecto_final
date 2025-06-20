@@ -88,3 +88,10 @@ void presioneTeclaParaContinuar() {
   getchar(); // Consume el '\n' del buffer de entrada
   getchar(); // Espera a que el usuario presione una tecla
 }
+
+void esperar(int segundos) {
+    time_t inicio = time(NULL);
+    while (time(NULL) - inicio < segundos) {
+        // Espera activa (busy wait)
+    }
+}

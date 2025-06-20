@@ -90,7 +90,9 @@ typedef struct{
 /**********************************************/
 /*                 Prototipado                */
 /**********************************************/
+void mostrarCreditos();
 
+void mostrarMenuAyuda();
 void mostrarMenuPrincipal();
 void mostrarMenuJuego();
 void menuOpcionesPelea();
@@ -106,7 +108,9 @@ void mostrarMap(HashMap * );
 
 bool usarPociones(Jugador * );
 bool cicloPelea(Jugador * , List * );
+
 void seleccionOpcion(Jugador * );
+void seleccionOpcionAyuda();
 
 /**********************************************/
 /*                    Main                    */
@@ -146,7 +150,7 @@ int main(){
             leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
             asignar_mobs(juego, mobs);
 
-            printf("Indeque el nombre del nuevo jugador:");
+            printf("INDIQUE EL NOMBRE DEL NUEVO JUGADOR: ");
             scanf(" %49s", name);
             getchar();
             player = createPlayer(name, juego);
@@ -154,11 +158,11 @@ int main(){
             break;
         case '2':
             //Ayuda
-            //mostrarAyuda();
+            seleccionOpcionAyuda();
             break;
         case '3':
             //Creditos
-            //mostrarCreditos();
+            mostrarCreditos();
             break;
         case '4':
             //Salir
@@ -175,14 +179,56 @@ int main(){
 }
 
 /**********************************************/
+/*            Mostrar creditos                */
+/**********************************************/
+
+void mostrarCreditos()
+{
+    limpiarPantalla();
+    const char* creditos[] = {
+        "Falta Creatividad Studios Presenta:",
+        "Falta XP",
+        "",
+        "Director: Eduardo Sandoval",
+        "Productor: Joaquin Contreras",
+        "Creacion de Enemigos: Brandon Caceres",
+        "Interface Designer: Josue Huaiquil", "",
+        "Equipo de Programacion:",
+        "Eduardo Sandoval",
+        "Joaquin Contreras",
+        "Brandon Caceres",
+        "Josue Huaiquil", "",
+        "Gracias por jugar Falta XP!"
+    };
+
+    int cantidad = sizeof(creditos) / sizeof(creditos[0]);
+
+    for (int i = 0; i < cantidad; i++) {
+        printf("%s\n", creditos[i]);
+        esperar(1);         // Espera 1 segundos
+    }
+}
+
+/**********************************************/
 /*               Mostrar menus                */
 /**********************************************/
 
+void mostrarMenuAyuda() {
+    limpiarPantalla();
+    puts("========================================");
+    puts("              MENU DE AYUDA                  ");
+    puts("========================================");
+  
+    puts("1) SOBRE LOS MOVIMIENTOS");
+    puts("2) SOBRE LOS ENEMIGOS");
+    puts("3) SOBRE EL EQUIPAMENTO");
+    puts("4) VOLVER AL MENU PRINCIPAL");
+}
 
 void mostrarMenuPrincipal() {
     limpiarPantalla();
     puts("========================================");
-    puts("               FALTA EXP               ");
+    puts("               FALTA XP                ");
     puts("========================================");
   
     puts("1) INICIAR NUEVA PARTIDA");
@@ -194,7 +240,7 @@ void mostrarMenuPrincipal() {
 void mostrarMenuJuego(){
     limpiarPantalla();
     puts("========================================");
-    puts("               FALTA EXP               ");
+    puts("               FALTA XP                ");
     puts("========================================");
   
     puts("1) EXPLORAR ZONAS"); //explorar-zona
@@ -208,7 +254,7 @@ void mostrarMenuJuego(){
 void menuOpcionesPelea()
 {
     puts("========================================");
-    puts("               PELEA                   ");
+    puts("              MENU DE PELEA                   ");
     puts("========================================");
     puts("1) Atacar al enemigo");
     puts("2) Usar poción");
@@ -718,8 +764,6 @@ void seleccionOpcion(Jugador * player)
         printf("INGRESE SU OPCION: ");
         scanf(" %c", &op);
 
-        
-
         //Se realizan las acciones según la opción seleccionada
         switch (op) {
             case '1':
@@ -743,4 +787,34 @@ void seleccionOpcion(Jugador * player)
         }
         presioneTeclaParaContinuar();
     } // El bucle continuará mientras el jugador esté activo
+}
+
+void seleccionOpcionAyuda()
+{
+    char op;
+    do{
+        //Se muestra un menú principal y se selecciona una opción
+        mostrarMenuAyuda();
+        printf("INGRESE SU OPCION: ");
+        scanf(" %c", &op);
+
+        switch (op) {
+            case '1':
+                //Movimiento
+                break;
+            case '2':
+                //Enemigos
+                break;
+            case '3':
+                //Equipamento / Items
+                break;
+            case '4':
+                return;
+            default:
+                printf("Opcion no valida.\n");
+                break;
+        }  
+        presioneTeclaParaContinuar();
+    } while (op != 4);
+    
 }

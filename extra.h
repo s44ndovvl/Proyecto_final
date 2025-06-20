@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "list.h"
 
 /**
@@ -45,5 +46,8 @@ List *split_string(const char *str, const char *delim);
 void limpiarPantalla();
 
 void presioneTeclaParaContinuar();
+
+//Función para hacer una espera cada x segundos
+void esperar(int segundos);
 
 #endif
