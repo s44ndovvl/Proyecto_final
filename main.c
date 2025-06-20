@@ -92,6 +92,38 @@ void mostrarMap(HashMap * );
 void leer_mobs(HashMap * );
 void mostrar_mobs(HashMap * );
 
+void mostrarMenuAyuda() {
+    limpiarPantalla();
+    puts("========================================");
+    puts("               FALTA EXP                  ");
+    puts("========================================");
+  
+    puts("1) ¿COMO MOVERSE?");
+    puts("2) ENEMIGOS");
+    puts("3) EQUIPAMENTO");
+    puts("4) SALIR");
+}
+
+
+void mostrarAyuda()
+{
+    char op;
+    do{
+    //Se muestra un menú principal y se selecciona una opción
+        mostrarMenuAyuda();
+        printf("INGRESE SU OPCION: ");
+        scanf(" %c", &op);
+
+        switch (op)
+        {
+        case '1':
+            return;
+        }  
+        presioneTeclaParaContinuar();
+    } while (op != 4);
+    
+}
+
 void esperar(int segundos) {
     time_t inicio = time(NULL);
     while (time(NULL) - inicio < segundos) {
@@ -156,7 +188,7 @@ int main(){
             break;
         case '2':
             //Ayuda
-            //mostrarAyuda();
+            mostrarAyuda();
             break;
         case '3':
             //Creditos
