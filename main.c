@@ -243,10 +243,10 @@ void leer_escenarios(HashMap * juego){
         strcpy(escenario->nombre, campos[1]);
         strcpy(escenario->leyenda, campos[2]);
 
-        strcpy(escenario->id_arriba, campos[3]);
-        strcpy(escenario->id_abajo, campos[4]);
-        strcpy(escenario->id_izquierda, campos[5]);
-        strcpy(escenario->id_derecha, campos[6]);
+        strcpy(escenario->id_izquierda, campos[3]);
+        strcpy(escenario->id_derecha, campos[4]);
+        strcpy(escenario->id_arriba, campos[5]);
+        strcpy(escenario->id_abajo, campos[6]);
 
         strcpy(escenario->dificultad, campos[7]);
 
