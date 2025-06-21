@@ -48,6 +48,6 @@ void limpiarPantalla();
 void presioneTeclaParaContinuar();
 
 //Función para hacer una espera cada x segundos
-void esperar(int segundos);
+void esperar(int x);
 
 #endif

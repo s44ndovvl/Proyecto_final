@@ -3,12 +3,13 @@
 
 typedef struct List List;
 
-// Esta función crea una lista vacía y devuelve un puntero a la lista.
+// Función para crear una lista vacía y devuelve un puntero a la lista.
 List *list_create();
 
-// Esta función devuelve un puntero al primer elemento de la lista.
+// Función que devuelve un puntero al primer elemento de la lista.
 void *list_first(List *L);
 
+// Función que devuelve un puntero al último elemento de la lista.
 void *list_last(List *L);
 
 // Esta función mueve el puntero de la lista al siguiente elemento y devuelve un
