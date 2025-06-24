@@ -256,9 +256,9 @@ void menuOpcionesPelea()
     puts("========================================");
     puts("              MENU DE PELEA                   ");
     puts("========================================");
-    puts("1) Atacar al enemigo");
-    puts("2) Usar poción");
-    puts("3) Huir de la pelea");
+    puts("1) ATACAR AL ENEMIGO");
+    puts("2) USAR POCION");
+    puts("3) HUIR DE LA PELEA");
     puts("=========================================");
 }
 
@@ -693,16 +693,16 @@ bool cicloPelea(Jugador * player, List * enemigos)
     bool EnemigoVivo = true; // Variable para controlar si el enemigo está activo
     while(EnemigoVivo && player->vida > 0) {
         limpiarPantalla();
-        printf("Jugador: %s | Vida: %d | Estamina: %d | Ataque: %d | Defensa: %d\n",
+        printf("JUGADOR: %s | VIDA: %d | ESTAMINA: %d | ATAQUE: %d | DEFENSA: %d\n",
             player->nombre, player->vida, player->estamina, player->ataque, player->defensa);
-        printf("Enemigo: %s | Vida: %d | Defensa: %d\n",
+        printf("ENEMIGO: %s | VIDA: %d | DEFENSA: %d\n",
             enemigo->nombre, enemigo->vida, enemigo->defensa);
         
         menuOpcionesPelea(); // Muestra el menú de opciones de pelea
         bool repetirAccion = false; // Variable para controlar si se repite la acción
         
         char opcion;
-        printf("Seleccione una opción: ");
+        printf("INGRESE SU OPCION: ");
         scanf(" %c", &opcion);
 
         switch (opcion)
@@ -782,7 +782,7 @@ void seleccionOpcion(Jugador * player)
                 //equipar_DesequiparItem(); //FUNCIÓN PARA EQUIPAR Y DESEQUIPAR ITEMS
                 return;
             default:
-                printf("Opcion no valida.\n");
+                printf("OPCION NO VALIDA.\n");
                 break;
         }
         presioneTeclaParaContinuar();
@@ -811,7 +811,7 @@ void seleccionOpcionAyuda()
             case '4':
                 return;
             default:
-                printf("Opcion no valida.\n");
+                printf("OPCION NO VALIDA.\n");
                 break;
         }  
         presioneTeclaParaContinuar();
