@@ -64,14 +64,22 @@ typedef struct{
     char nombre[50];
     int vida;
     int max_vida;
+    int vida_total;
+
     int estamina;
     int max_estamina;
+    int estamina_total;
+
     int defensa;
     int max_defensa;
     int defensa_total;
+
     int ataque;
+    int ataque_total;
+
     int experiencia;
     int nivel;
+
     Escenarios *actual;
     Inventario inventario;
     bool inmunidad;
@@ -105,6 +113,15 @@ void mostrar_mobs(HashMap * );
 void mostrarMap(HashMap * );
 
 bool usarPociones(Jugador * );
+void aplicarBufo(Jugador * , const char *, int );
+void calcularEstatsT(Jugador * );
+void reiniciarArma(Arma * );
+bool ataque(Jugador * , Enemigo * );
+void reiniciarArmadura(Armadura * );
+void ataqueEnemigo(Jugador * , Enemigo * );
+
+bool huida(Jugador *, Enemigo *);
+
 bool cicloPelea(Jugador * , List * );
 void seleccionOpcion(Jugador * );
 
@@ -121,12 +138,11 @@ int main(){
         return 1;
     }
     srand(time(NULL));
-    //leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
+    leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
     //mostrarMap(juego);
-    //leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
+    leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
     //mostrar_mobs(mobs); // Muestra el contenido del HashMap
-    //asignar_mobs(juego, mobs);
-
+    asignar_mobs(juego, mobs);
 
     char op;
     char name[50];
@@ -141,11 +157,6 @@ int main(){
         {
         case '1':
             //Nueva partida
-            //cargar los csv y hacer conexiones. hacerlo en un condicional para que ocurra una sola vez
-            leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
-            leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
-            asignar_mobs(juego, mobs);
-
             printf("Indeque el nombre del nuevo jugador:");
             scanf(" %49s", name);
             getchar();
@@ -464,11 +475,15 @@ Jugador * createPlayer(char nombre[], HashMap * juego){
     Pair * inicio = firstMap(juego);
     player->vida = 100;
     player->max_vida = 100;
+    player->vida_total = 0;
     player->estamina = 15;
     player->max_estamina = 15;
-    player->defensa = 100;
+    player->estamina_total = 0;
+    player->defensa = 10;
     player->max_defensa = 100;
-    player->ataque = 1;
+    player->defensa_total = 0;
+    player->ataque = 4;
+    player->ataque_total = 4;
     player->experiencia = 0;
     player->nivel = 0;
     player->actual = inicio->value;
@@ -643,6 +658,117 @@ bool usarPociones(Jugador * player){
     return false;
 }
 
+void aplicarBufo(Jugador * player, const char *bufo, int valor){
+    if (strcmp(bufo, "Escudo extra") == 0) {
+        player->defensa_total += valor;
+    } else if (strcmp(bufo, "Estamina") == 0) {
+        player->estamina_total += valor;
+    } else if (strcmp(bufo, "Aumento de vida") == 0) {
+        player->vida_total += valor;
+    } else if (strcmp(bufo, "Ataque") == 0) {
+        player->ataque_total += valor;
+    }
+}
+
+void calcularEstatsT(Jugador * player){
+    player->ataque_total = player->ataque;
+    if (strcmp(player->inventario.armas.nombre, "Sin arma") != 0){
+        player->ataque_total += player->inventario.armas.ataque;
+    }
+
+    player->defensa_total = player->defensa;
+    if (strcmp(player->inventario.casco.nombre, "Sin armadura") != 0){
+        player->defensa_total += player->inventario.casco.defensa;
+        aplicarBufo(player, player->inventario.casco.bufo, player->inventario.casco.valor);
+    }
+    if (strcmp(player->inventario.pechera.nombre, "Sin armadura") != 0){
+        player->defensa_total += player->inventario.casco.defensa;
+        aplicarBufo(player, player->inventario.pechera.bufo, player->inventario.pechera.valor);
+    }
+    if (strcmp(player->inventario.guantes.nombre, "Sin armadura") != 0){
+        player->defensa_total += player->inventario.casco.defensa;
+        aplicarBufo(player, player->inventario.guantes.bufo, player->inventario.guantes.valor);
+    }
+    if (strcmp(player->inventario.pantalones.nombre, "Sin armadura") != 0){
+        player->defensa_total += player->inventario.casco.defensa;
+        aplicarBufo(player, player->inventario.pantalones.bufo, player->inventario.pantalones.valor);
+    }
+    if (strcmp(player->inventario.botas.nombre, "Sin armadura") != 0){
+        player->defensa_total += player->inventario.casco.defensa;
+        aplicarBufo(player, player->inventario.botas.bufo, player->inventario.botas.valor);
+    }
+}
+
+void reiniciarArma(Arma * arma){
+    strcpy(arma->nombre, "Sin arma");
+    arma->ataque = 0;
+    arma->durabilidad = 0;
+}
+
+bool ataque(Jugador * player, Enemigo * enemigo){
+    enemigo->vida -= ((player->ataque_total * player->ataque_total) / (player->ataque_total + enemigo->defensa)); // El enemigo recibe daño del jugador
+    player->inventario.armas.durabilidad -=1;
+    if (player->inventario.armas.durabilidad == 0){
+        printf("Tu %s se ha roto", player->inventario.armas.nombre);
+        reiniciarArma(&player->inventario.armas);
+    }
+    if (enemigo->vida <= 0){
+        puts("El enemigo ha sido derrotado!");
+        //recoger_items_enemigos(player, enemigo);
+        return false;
+    }
+    return true;
+}
+
+void reiniciarArmadura(Armadura * vacia){
+    printf("Tu %s se ha roto", vacia->nombre);
+    strcpy(vacia->nombre, "Sin armadura");
+    strcpy(vacia->tipo, "");
+    vacia->defensa = 0;
+    vacia->durabilidad = 0;
+    strcpy(vacia->bufo, "");
+    vacia->valor = 0;
+}
+
+void perdidaDurabilidad(Armadura * aux){
+    if (strcmp(aux->nombre, "Sin armadura") != 0){
+        aux->durabilidad -= 1;
+        if (aux->durabilidad <= 0) reiniciarArmadura(aux);
+    }
+}
+
+void ataqueEnemigo(Jugador * player, Enemigo * enemigo){
+
+    int dano = (int)((enemigo->ataque * enemigo->ataque) / (enemigo->ataque + player->defensa_total));
+    player->vida -= dano;
+    
+    perdidaDurabilidad(&player->inventario.casco);
+    perdidaDurabilidad(&player->inventario.pechera);
+    perdidaDurabilidad(&player->inventario.guantes);
+    perdidaDurabilidad(&player->inventario.pantalones);
+    perdidaDurabilidad(&player->inventario.botas);
+
+    printf("El enemigo %s te ha atacado y te ha hecho %d de daño.\n", enemigo->nombre, dano);
+    if (player->vida <= 0) {
+        puts("Has sido derrotado por el enemigo.");
+    }
+}
+
+bool huida(Jugador *player, Enemigo *enemigo)
+{
+    int margen = (player->estamina + player->vida) / enemigo->vida; // Calcula el margen de éxito para huir
+    
+    int index = rand() % enemigo->vida;
+    
+    if (index < margen) {
+        puts("¡Has logrado huir de la pelea!");
+        player->estamina -= 5; // El jugador pierde estamina al intentar huir
+        if (player->estamina < 0) player->estamina = 0; // Asegura que la estamina no sea negativa
+        return true; // El jugador ha huido exitosamente
+    }
+    return false;
+}
+
 bool cicloPelea(Jugador * player, List * enemigos)
 {
     Enemigo * enemigo = seleccionarEnemigo(enemigos); // Selecciona un enemigo de la lista proporcionada
@@ -657,8 +783,11 @@ bool cicloPelea(Jugador * player, List * enemigos)
     bool EnemigoVivo = true; // Variable para controlar si el enemigo está activo
     while(EnemigoVivo && player->vida > 0) {
         limpiarPantalla();
+        
+        calcularEstatsT(player);
+        
         printf("Jugador: %s | Vida: %d | Estamina: %d | Ataque: %d | Defensa: %d\n",
-            player->nombre, player->vida, player->estamina, player->ataque, player->defensa);
+            player->nombre, player->vida, player->estamina, player->ataque_total, player->defensa_total);
         printf("Enemigo: %s | Vida: %d | Defensa: %d\n",
             enemigo->nombre, enemigo->vida, enemigo->defensa);
         
@@ -672,44 +801,27 @@ bool cicloPelea(Jugador * player, List * enemigos)
         switch (opcion)
         {
         case '1':
-            enemigo->vida -= (player->ataque - enemigo->defensa); // El enemigo recibe daño del jugador
+            EnemigoVivo = ataque(player, enemigo);
             break;
         case '2':
             repetirAccion = usarPociones(player); // El jugador usa una poción
             break;
         case '3':
-            /* code */
+            if(huida(player, enemigo)) return true;
             break;
-        
         default:
             puts("Opción no válida, por favor intente de nuevo.");
             repetirAccion = true; // Repite la acción si la opción no es válida
             break;
         }
         if (repetirAccion) continue; // Si se repite la acción, vuelve al inicio del bucle
-        //if(opcion != '1' || opcion != '2'|| opcion != '3') continue;
-        player->vida -= (int) (enemigo->ataque/(player->defensa_total * 0.01)); // El jugador recibe daño del enemigo
-
-        // Simulación de acciones (esto debería ser reemplazado por la lógica real del juego)
-        // Por ejemplo:
-        // - El jugador ataca al enemigo
-        // - El enemigo ataca al jugador
-        // - Se verifica si alguno ha muerto
-        // - Se actualizan las estadísticas
-
-        // Simulación simple para continuar el ciclo
-        if (enemigo->vida <= 0) {
-            puts("El enemigo ha sido derrotado!");
-            EnemigoVivo = false; // El enemigo ya no está vivo
-        }
-        
+        if(EnemigoVivo) ataqueEnemigo(player, enemigo); // El enemigo ataca al jugador
     }
 
     if (player->vida <= 0) {
         puts("El jugador ha sido derrotado!");
         return false; // El jugador ha muerto
     }
-
     return true;
 }
 
