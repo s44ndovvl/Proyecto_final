@@ -44,13 +44,13 @@ typedef struct{
 
 //Estructura para cada escenario(nivel)
 struct Escenarios{
-    char id[3];
+    char id[4];
     char nombre[50];
     char leyenda[500];
-    char id_arriba[3];
-    char id_abajo[3];
-    char id_izquierda[3];
-    char id_derecha[3];
+    char id_arriba[4];
+    char id_abajo[4];
+    char id_izquierda[4];
+    char id_derecha[4];
     Escenarios *arriba;
     Escenarios *abajo;
     Escenarios *izquierda;
@@ -239,33 +239,57 @@ void leer_escenarios(HashMap * juego){
         escenario->derecha = NULL;
         
         //Copia los datos del CSV a la estructura del escenario
-        strcpy(escenario->id, campos[0]);
-        strcpy(escenario->nombre, campos[1]);
-        strcpy(escenario->leyenda, campos[2]);
+        strncpy(escenario->id, campos[0], sizeof(escenario->id));
+        strncpy(escenario->nombre, campos[1], sizeof(escenario->nombre));
+        strncpy(escenario->leyenda, campos[2], sizeof(escenario->leyenda));
 
-        strcpy(escenario->id_arriba, campos[3]);
-        strcpy(escenario->id_abajo, campos[4]);
-        strcpy(escenario->id_izquierda, campos[5]);
-        strcpy(escenario->id_derecha, campos[6]);
+        strcpy(escenario->id_izquierda, campos[3]);
+        strcpy(escenario->id_derecha, campos[4]);
+        strcpy(escenario->id_arriba, campos[5]);
+        strcpy(escenario->id_abajo, campos[6]);
 
-        strcpy(escenario->dificultad, campos[7]);
+        strncpy(escenario->dificultad, campos[7], sizeof(escenario->dificultad));
 
         insertMap(juego, escenario->id, escenario);
 
     }
     fclose(archivo);
 
-    // Segunda pasada: establecer los punteros de direcciÃ³n entre escenarios
-    for (Pair *pp = firstMap(juego); pp; pp = nextMap(juego)) // Recorre todos los escenarios
-    {
-        Escenarios *e = (Escenarios*)pp->value; // Obtiene el escenario actual
-
-        if(atoi(e->id_abajo) != 0)e->abajo = (Escenarios*)searchMap(juego, e->id_abajo)->value; // Conecta el escenario abajo
-        if(atoi(e->id_arriba) != 0)e->arriba = (Escenarios*)searchMap(juego, e->id_arriba)->value; // Conecta el escenario arriba
-        if(atoi(e->id_izquierda) != 0)e->izquierda = (Escenarios*)searchMap(juego, e->id_izquierda)->value; // Conecta el escenario izquierda
-        if(atoi(e->id_derecha) != 0)e->derecha = (Escenarios*)searchMap(juego, e->id_derecha)->value; // Conecta el escenario derecha
-
+    // Segunda pasada: establecer los punteros de dirección entre escenarios
+    List * claves = list_create();
+    Pair * par = firstMap(juego);
+    while (par != NULL) {
+        list_pushBack(claves, par->key);
+        par = nextMap(juego);
     }
+
+    // Ahora recorremos esa lista para validar enlaces sin afectar el iterador de juego
+    for (char * clave = list_first(claves); clave != NULL; clave = list_next(claves)) {
+        Pair * pEscenario = searchMap(juego, clave);
+        if (!pEscenario) continue;
+
+        Escenarios * escenario = (Escenarios*)pEscenario->value;
+
+        if (strcmp(escenario->id_izquierda, "-1") != 0){
+            Pair * aux = searchMap(juego, escenario->id_izquierda);
+            if (aux != NULL) escenario->izquierda = (Escenarios*)aux->value;
+        }
+        if (strcmp(escenario->id_derecha, "-1") != 0){
+            Pair * aux = searchMap(juego, escenario->id_derecha);
+            if (aux != NULL) escenario->derecha = (Escenarios*)aux->value;
+        }
+        if (strcmp(escenario->id_arriba, "-1") != 0){
+            Pair * aux = searchMap(juego, escenario->id_arriba);
+            if (aux != NULL) escenario->arriba = (Escenarios*)aux->value;
+        }
+        if (strcmp(escenario->id_abajo, "-1") != 0){
+            Pair * aux = searchMap(juego, escenario->id_abajo);
+            if (aux != NULL) escenario->abajo = (Escenarios*)aux->value;
+        }
+    }
+
+    list_clean(claves);
+    free(claves);
 }
 
 void leer_mobs(HashMap *mobs) {
@@ -560,11 +584,10 @@ bool usarPociones(Jugador * player){
     puts("=== POCIONES DISPONIBLES ===");
 
     int index = 1;
-    List * temporal = list_create();
-
-    for (Pocion* p = list_first(player->inventario.pocion); p != NULL; p = list_next(player->inventario.pocion)){
-        printf("%d) %s - %s (+%d)\n", index, p->nombre, p->efecto, p->valor);
-        list_pushBack(temporal, p);
+    Pocion *p_display = list_first(player->inventario.pocion);
+    while (p_display != NULL) {
+        printf("%d) %s - %s (+%d)\n", index, p_display->nombre, p_display->efecto, p_display->valor);
+        p_display = list_next(player->inventario.pocion);
         index++;
     }
     
@@ -573,19 +596,18 @@ bool usarPociones(Jugador * player){
     int opcion;
     scanf("%d", &opcion);
 
-    if (opcion >= index || opcion < 0){
+    if (opcion <= 0 || opcion > list_size(player->inventario.pocion)) {
         puts("No se uso ninguna pocion.");
-        list_clean(temporal);
         presioneTeclaParaContinuar();
-        return true;
+        return false; // Retorna false si no se usó ninguna poción
     }
 
-    int actual = 1;
-    Pocion *seleccionada = list_first(temporal);
-    while(seleccionada != NULL && actual < opcion){
-        seleccionada = list_next(temporal);
-        actual++;
+    // Mover `current` al nodo de la poción seleccionada
+    list_first(player->inventario.pocion); // Reset current to head
+    for (int i = 1; i < opcion; i++) {
+        list_next(player->inventario.pocion); // Move current to the selected potion
     }
+    Pocion *seleccionada = (Pocion *)list_next(player->inventario.pocion); // current ahora apunta a la pocion
 
     printf("Usaste la pocion: %s\n", seleccionada->nombre);
     if (strcmp(seleccionada->efecto, "Vida") == 0){
@@ -608,21 +630,9 @@ bool usarPociones(Jugador * player){
         printf("Tu estamina actual es: %d\n", player->estamina);
     }
 
-    List * nueva_lista = list_create();
-    for (Pocion* p = list_first(player->inventario.pocion); p != NULL; p = list_next(player->inventario.pocion)){
-        if (p != seleccionada){
-            list_pushBack(nueva_lista, p);
-        }
-        else{
-            free(p);
-        }
-    }
-    list_clean(player->inventario.pocion);
-    player->inventario.pocion = nueva_lista;
+    Pocion * pocion_a_liberar = (Pocion *)list_popCurrent(player->inventario.pocion);
+    free(pocion_a_liberar); // Libera la memoria de la poción usada
 
-    //popCurrent
-
-    list_clean(temporal);
     presioneTeclaParaContinuar();
 
     if(list_size(player->inventario.pocion) == 0){
