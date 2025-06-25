@@ -44,13 +44,13 @@ typedef struct{
 
 //Estructura para cada escenario(nivel)
 struct Escenarios{
-    char id[3];
+    char id[4];
     char nombre[50];
     char leyenda[500];
-    char id_arriba[3];
-    char id_abajo[3];
-    char id_izquierda[3];
-    char id_derecha[3];
+    char id_arriba[4];
+    char id_abajo[4];
+    char id_izquierda[4];
+    char id_derecha[4];
     Escenarios *arriba;
     Escenarios *abajo;
     Escenarios *izquierda;
@@ -64,14 +64,22 @@ typedef struct{
     char nombre[50];
     int vida;
     int max_vida;
+    int vida_total;
+
     int estamina;
     int max_estamina;
+    int estamina_total;
+
     int defensa;
     int max_defensa;
     int defensa_total;
+
     int ataque;
+    int ataque_total;
+
     int experiencia;
     int nivel;
+
     Escenarios *actual;
     Inventario inventario;
     bool inmunidad;
@@ -107,6 +115,15 @@ void mostrar_mobs(HashMap * );
 void mostrarMap(HashMap * );
 
 bool usarPociones(Jugador * );
+void aplicarBufo(Jugador * , const char *, int );
+void calcularEstatsT(Jugador * );
+void reiniciarArma(Arma * );
+bool ataque(Jugador * , Enemigo * );
+void reiniciarArmadura(Armadura * );
+void ataqueEnemigo(Jugador * , Enemigo * );
+
+bool huida(Jugador *, Enemigo *);
+
 bool cicloPelea(Jugador * , List * );
 
 void seleccionOpcion(Jugador * );
@@ -125,12 +142,11 @@ int main(){
         return 1;
     }
     srand(time(NULL));
-    //leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
+    leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
     //mostrarMap(juego);
-    //leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
+    leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
     //mostrar_mobs(mobs); // Muestra el contenido del HashMap
-    //asignar_mobs(juego, mobs);
-
+    asignar_mobs(juego, mobs);
 
     char op;
     char name[50];
@@ -145,12 +161,16 @@ int main(){
         {
         case '1':
             //Nueva partida
+<<<<<<< HEAD
             //cargar los csv y hacer conexiones. hacerlo en un condicional para que ocurra una sola vez
             leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
             leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
             asignar_mobs(juego, mobs);
 
             printf("INDIQUE EL NOMBRE DEL NUEVO JUGADOR: ");
+=======
+            printf("Indeque el nombre del nuevo jugador:");
+>>>>>>> 0e42c6fce291e22b0cc235e78a3a68dcf075096c
             scanf(" %49s", name);
             getchar();
             player = createPlayer(name, juego);
@@ -285,33 +305,64 @@ void leer_escenarios(HashMap * juego){
         escenario->derecha = NULL;
         
         //Copia los datos del CSV a la estructura del escenario
-        strcpy(escenario->id, campos[0]);
-        strcpy(escenario->nombre, campos[1]);
-        strcpy(escenario->leyenda, campos[2]);
+        strncpy(escenario->id, campos[0], sizeof(escenario->id));
+        strncpy(escenario->nombre, campos[1], sizeof(escenario->nombre));
+        strncpy(escenario->leyenda, campos[2], sizeof(escenario->leyenda));
 
+<<<<<<< HEAD
         strcpy(escenario->id_arriba, campos[5]);
         strcpy(escenario->id_abajo, campos[6]);
         strcpy(escenario->id_izquierda, campos[3]);
         strcpy(escenario->id_derecha, campos[4]);
+=======
+        strcpy(escenario->id_izquierda, campos[3]);
+        strcpy(escenario->id_derecha, campos[4]);
+        strcpy(escenario->id_arriba, campos[5]);
+        strcpy(escenario->id_abajo, campos[6]);
+>>>>>>> 0e42c6fce291e22b0cc235e78a3a68dcf075096c
 
-        strcpy(escenario->dificultad, campos[7]);
+        strncpy(escenario->dificultad, campos[7], sizeof(escenario->dificultad));
 
         insertMap(juego, escenario->id, escenario);
 
     }
     fclose(archivo);
 
-    // Segunda pasada: establecer los punteros de direcciÃ³n entre escenarios
-    for (Pair *pp = firstMap(juego); pp; pp = nextMap(juego)) // Recorre todos los escenarios
-    {
-        Escenarios *e = (Escenarios*)pp->value; // Obtiene el escenario actual
-
-        if(atoi(e->id_abajo) != 0)e->abajo = (Escenarios*)searchMap(juego, e->id_abajo)->value; // Conecta el escenario abajo
-        if(atoi(e->id_arriba) != 0)e->arriba = (Escenarios*)searchMap(juego, e->id_arriba)->value; // Conecta el escenario arriba
-        if(atoi(e->id_izquierda) != 0)e->izquierda = (Escenarios*)searchMap(juego, e->id_izquierda)->value; // Conecta el escenario izquierda
-        if(atoi(e->id_derecha) != 0)e->derecha = (Escenarios*)searchMap(juego, e->id_derecha)->value; // Conecta el escenario derecha
-
+    // Segunda pasada: establecer los punteros de dirección entre escenarios
+    List * claves = list_create();
+    Pair * par = firstMap(juego);
+    while (par != NULL) {
+        list_pushBack(claves, par->key);
+        par = nextMap(juego);
     }
+
+    // Ahora recorremos esa lista para validar enlaces sin afectar el iterador de juego
+    for (char * clave = list_first(claves); clave != NULL; clave = list_next(claves)) {
+        Pair * pEscenario = searchMap(juego, clave);
+        if (!pEscenario) continue;
+
+        Escenarios * escenario = (Escenarios*)pEscenario->value;
+
+        if (strcmp(escenario->id_izquierda, "-1") != 0){
+            Pair * aux = searchMap(juego, escenario->id_izquierda);
+            if (aux != NULL) escenario->izquierda = (Escenarios*)aux->value;
+        }
+        if (strcmp(escenario->id_derecha, "-1") != 0){
+            Pair * aux = searchMap(juego, escenario->id_derecha);
+            if (aux != NULL) escenario->derecha = (Escenarios*)aux->value;
+        }
+        if (strcmp(escenario->id_arriba, "-1") != 0){
+            Pair * aux = searchMap(juego, escenario->id_arriba);
+            if (aux != NULL) escenario->arriba = (Escenarios*)aux->value;
+        }
+        if (strcmp(escenario->id_abajo, "-1") != 0){
+            Pair * aux = searchMap(juego, escenario->id_abajo);
+            if (aux != NULL) escenario->abajo = (Escenarios*)aux->value;
+        }
+    }
+
+    list_clean(claves);
+    free(claves);
 }
 
 void leer_mobs(HashMap *mobs) {
@@ -486,11 +537,15 @@ Jugador * createPlayer(char nombre[], HashMap * juego){
     Pair * inicio = firstMap(juego);
     player->vida = 100;
     player->max_vida = 100;
+    player->vida_total = 0;
     player->estamina = 15;
     player->max_estamina = 15;
-    player->defensa = 100;
+    player->estamina_total = 0;
+    player->defensa = 10;
     player->max_defensa = 100;
-    player->ataque = 1;
+    player->defensa_total = 0;
+    player->ataque = 4;
+    player->ataque_total = 4;
     player->experiencia = 0;
     player->nivel = 0;
     player->actual = inicio->value;
@@ -606,11 +661,10 @@ bool usarPociones(Jugador * player){
     puts("=== POCIONES DISPONIBLES ===");
 
     int index = 1;
-    List * temporal = list_create();
-
-    for (Pocion* p = list_first(player->inventario.pocion); p != NULL; p = list_next(player->inventario.pocion)){
-        printf("%d) %s - %s (+%d)\n", index, p->nombre, p->efecto, p->valor);
-        list_pushBack(temporal, p);
+    Pocion *p_display = list_first(player->inventario.pocion);
+    while (p_display != NULL) {
+        printf("%d) %s - %s (+%d)\n", index, p_display->nombre, p_display->efecto, p_display->valor);
+        p_display = list_next(player->inventario.pocion);
         index++;
     }
     
@@ -619,19 +673,18 @@ bool usarPociones(Jugador * player){
     int opcion;
     scanf("%d", &opcion);
 
-    if (opcion >= index || opcion < 0){
+    if (opcion <= 0 || opcion > list_size(player->inventario.pocion)) {
         puts("No se uso ninguna pocion.");
-        list_clean(temporal);
         presioneTeclaParaContinuar();
-        return true;
+        return false; // Retorna false si no se usó ninguna poción
     }
 
-    int actual = 1;
-    Pocion *seleccionada = list_first(temporal);
-    while(seleccionada != NULL && actual < opcion){
-        seleccionada = list_next(temporal);
-        actual++;
+    // Mover `current` al nodo de la poción seleccionada
+    list_first(player->inventario.pocion); // Reset current to head
+    for (int i = 1; i < opcion; i++) {
+        list_next(player->inventario.pocion); // Move current to the selected potion
     }
+    Pocion *seleccionada = (Pocion *)list_next(player->inventario.pocion); // current ahora apunta a la pocion
 
     printf("Usaste la pocion: %s\n", seleccionada->nombre);
     if (strcmp(seleccionada->efecto, "Vida") == 0){
@@ -654,27 +707,126 @@ bool usarPociones(Jugador * player){
         printf("Tu estamina actual es: %d\n", player->estamina);
     }
 
-    List * nueva_lista = list_create();
-    for (Pocion* p = list_first(player->inventario.pocion); p != NULL; p = list_next(player->inventario.pocion)){
-        if (p != seleccionada){
-            list_pushBack(nueva_lista, p);
-        }
-        else{
-            free(p);
-        }
-    }
-    list_clean(player->inventario.pocion);
-    player->inventario.pocion = nueva_lista;
+    Pocion * pocion_a_liberar = (Pocion *)list_popCurrent(player->inventario.pocion);
+    free(pocion_a_liberar); // Libera la memoria de la poción usada
 
-    //popCurrent
-
-    list_clean(temporal);
     presioneTeclaParaContinuar();
 
     if(list_size(player->inventario.pocion) == 0){
         puts("Te has quedado sin pociones");
         presioneTeclaParaContinuar();
         return false;
+    }
+    return false;
+}
+
+void aplicarBufo(Jugador * player, const char *bufo, int valor){
+    if (strcmp(bufo, "Escudo extra") == 0) {
+        player->defensa_total += valor;
+    } else if (strcmp(bufo, "Estamina") == 0) {
+        player->estamina_total += valor;
+    } else if (strcmp(bufo, "Aumento de vida") == 0) {
+        player->vida_total += valor;
+    } else if (strcmp(bufo, "Ataque") == 0) {
+        player->ataque_total += valor;
+    }
+}
+
+void calcularEstatsT(Jugador * player){
+    player->ataque_total = player->ataque;
+    if (strcmp(player->inventario.armas.nombre, "Sin arma") != 0){
+        player->ataque_total += player->inventario.armas.ataque;
+    }
+
+    player->defensa_total = player->defensa;
+    if (strcmp(player->inventario.casco.nombre, "Sin armadura") != 0){
+        player->defensa_total += player->inventario.casco.defensa;
+        aplicarBufo(player, player->inventario.casco.bufo, player->inventario.casco.valor);
+    }
+    if (strcmp(player->inventario.pechera.nombre, "Sin armadura") != 0){
+        player->defensa_total += player->inventario.casco.defensa;
+        aplicarBufo(player, player->inventario.pechera.bufo, player->inventario.pechera.valor);
+    }
+    if (strcmp(player->inventario.guantes.nombre, "Sin armadura") != 0){
+        player->defensa_total += player->inventario.casco.defensa;
+        aplicarBufo(player, player->inventario.guantes.bufo, player->inventario.guantes.valor);
+    }
+    if (strcmp(player->inventario.pantalones.nombre, "Sin armadura") != 0){
+        player->defensa_total += player->inventario.casco.defensa;
+        aplicarBufo(player, player->inventario.pantalones.bufo, player->inventario.pantalones.valor);
+    }
+    if (strcmp(player->inventario.botas.nombre, "Sin armadura") != 0){
+        player->defensa_total += player->inventario.casco.defensa;
+        aplicarBufo(player, player->inventario.botas.bufo, player->inventario.botas.valor);
+    }
+}
+
+void reiniciarArma(Arma * arma){
+    strcpy(arma->nombre, "Sin arma");
+    arma->ataque = 0;
+    arma->durabilidad = 0;
+}
+
+bool ataque(Jugador * player, Enemigo * enemigo){
+    enemigo->vida -= ((player->ataque_total * player->ataque_total) / (player->ataque_total + enemigo->defensa)); // El enemigo recibe daño del jugador
+    player->inventario.armas.durabilidad -=1;
+    if (player->inventario.armas.durabilidad == 0){
+        printf("Tu %s se ha roto", player->inventario.armas.nombre);
+        reiniciarArma(&player->inventario.armas);
+    }
+    if (enemigo->vida <= 0){
+        puts("El enemigo ha sido derrotado!");
+        //recoger_items_enemigos(player, enemigo);
+        return false;
+    }
+    return true;
+}
+
+void reiniciarArmadura(Armadura * vacia){
+    printf("Tu %s se ha roto", vacia->nombre);
+    strcpy(vacia->nombre, "Sin armadura");
+    strcpy(vacia->tipo, "");
+    vacia->defensa = 0;
+    vacia->durabilidad = 0;
+    strcpy(vacia->bufo, "");
+    vacia->valor = 0;
+}
+
+void perdidaDurabilidad(Armadura * aux){
+    if (strcmp(aux->nombre, "Sin armadura") != 0){
+        aux->durabilidad -= 1;
+        if (aux->durabilidad <= 0) reiniciarArmadura(aux);
+    }
+}
+
+void ataqueEnemigo(Jugador * player, Enemigo * enemigo){
+
+    int dano = (int)((enemigo->ataque * enemigo->ataque) / (enemigo->ataque + player->defensa_total));
+    player->vida -= dano;
+    
+    perdidaDurabilidad(&player->inventario.casco);
+    perdidaDurabilidad(&player->inventario.pechera);
+    perdidaDurabilidad(&player->inventario.guantes);
+    perdidaDurabilidad(&player->inventario.pantalones);
+    perdidaDurabilidad(&player->inventario.botas);
+
+    printf("El enemigo %s te ha atacado y te ha hecho %d de daño.\n", enemigo->nombre, dano);
+    if (player->vida <= 0) {
+        puts("Has sido derrotado por el enemigo.");
+    }
+}
+
+bool huida(Jugador *player, Enemigo *enemigo)
+{
+    int margen = (player->estamina + player->vida) / enemigo->vida; // Calcula el margen de éxito para huir
+    
+    int index = rand() % enemigo->vida;
+    
+    if (index < margen) {
+        puts("¡Has logrado huir de la pelea!");
+        player->estamina -= 5; // El jugador pierde estamina al intentar huir
+        if (player->estamina < 0) player->estamina = 0; // Asegura que la estamina no sea negativa
+        return true; // El jugador ha huido exitosamente
     }
     return false;
 }
@@ -693,9 +845,18 @@ bool cicloPelea(Jugador * player, List * enemigos)
     bool EnemigoVivo = true; // Variable para controlar si el enemigo está activo
     while(EnemigoVivo && player->vida > 0) {
         limpiarPantalla();
+<<<<<<< HEAD
         printf("JUGADOR: %s | VIDA: %d | ESTAMINA: %d | ATAQUE: %d | DEFENSA: %d\n",
             player->nombre, player->vida, player->estamina, player->ataque, player->defensa);
         printf("ENEMIGO: %s | VIDA: %d | DEFENSA: %d\n",
+=======
+        
+        calcularEstatsT(player);
+        
+        printf("Jugador: %s | Vida: %d | Estamina: %d | Ataque: %d | Defensa: %d\n",
+            player->nombre, player->vida, player->estamina, player->ataque_total, player->defensa_total);
+        printf("Enemigo: %s | Vida: %d | Defensa: %d\n",
+>>>>>>> 0e42c6fce291e22b0cc235e78a3a68dcf075096c
             enemigo->nombre, enemigo->vida, enemigo->defensa);
         
         menuOpcionesPelea(); // Muestra el menú de opciones de pelea
@@ -708,44 +869,27 @@ bool cicloPelea(Jugador * player, List * enemigos)
         switch (opcion)
         {
         case '1':
-            enemigo->vida -= (player->ataque - enemigo->defensa); // El enemigo recibe daño del jugador
+            EnemigoVivo = ataque(player, enemigo);
             break;
         case '2':
             repetirAccion = usarPociones(player); // El jugador usa una poción
             break;
         case '3':
-            /* code */
+            if(huida(player, enemigo)) return true;
             break;
-        
         default:
             puts("Opción no válida, por favor intente de nuevo.");
             repetirAccion = true; // Repite la acción si la opción no es válida
             break;
         }
         if (repetirAccion) continue; // Si se repite la acción, vuelve al inicio del bucle
-        //if(opcion != '1' || opcion != '2'|| opcion != '3') continue;
-        player->vida -= (int) (enemigo->ataque/(player->defensa_total * 0.01)); // El jugador recibe daño del enemigo
-
-        // Simulación de acciones (esto debería ser reemplazado por la lógica real del juego)
-        // Por ejemplo:
-        // - El jugador ataca al enemigo
-        // - El enemigo ataca al jugador
-        // - Se verifica si alguno ha muerto
-        // - Se actualizan las estadísticas
-
-        // Simulación simple para continuar el ciclo
-        if (enemigo->vida <= 0) {
-            puts("El enemigo ha sido derrotado!");
-            EnemigoVivo = false; // El enemigo ya no está vivo
-        }
-        
+        if(EnemigoVivo) ataqueEnemigo(player, enemigo); // El enemigo ataca al jugador
     }
 
     if (player->vida <= 0) {
         puts("El jugador ha sido derrotado!");
         return false; // El jugador ha muerto
     }
-
     return true;
 }
 

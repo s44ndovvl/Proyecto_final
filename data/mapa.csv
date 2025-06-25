@@ -1,8 +1,18 @@
 ID, Nombre, leyenda, izquierda, derecha, arriba, abajo, dificultad
-1, Pasillo Inicial,, 0, 0, 0, 2, Facil
-2, Pasillo Superior,, 0, 0, 1, 3, Facil
-3, Pasillo central,, 5, 6, 2, 4, Media
-4, Pasillo Inferior,, 0, 0, 3, 7, Dificil
-5, Pasillo izquierda,, 0, 0, 3, 0, Media
-6, Pasillo derecha,, 0, 0, 3, 0, Dificil
-7, Pasillo Final,, 0, 0, 4, 0, Boss
+1, Sala Principal 1,, 0, 0, 0, 2, Facil
+2, Sala Principal 2,, 15, 0, 1, 3, Facil
+3, Sala Principal 3,, 11, 0, 2, 4, Facil
+4, Sala Principal 4,, 0, 0, 3, 5, Facil
+5, Sala Principal 5,, 0, 12, 4, 6, Facil
+6, Sala Principal 6,, 0, 16, 5, 7, Media
+7, Sala Principal 7,, 13, 0, 6, 8, Media
+8, Sala Principal 8,, 17, 0, 7, 9, Dificil
+9, Sala Principal 9,, 0, 14, 8, 10, Dificil
+10, Sala Principal 10,, 0, 0, 9, 0, Boss
+11, Sala Secundaria de 3,, 0, 3, 0, 0, Media
+12, Sala Secundaria de 5,, 5, 0, 0, 0, Media
+13, Sala Secundaria de 7,, 0, 7, 0, 0, Media
+14, Sala Secundaria de 9,, 9, 0, 0, 0, Dificil
+15, Sala Secundaria de 2,, 0, 2, 0, 0, Media
+16, Sala Secundaria de 6,, 6, 0, 0, 0, Media
+17, Sala Secundaria de 8,, 0, 8, 0, 0, Dificil
