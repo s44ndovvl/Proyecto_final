@@ -161,16 +161,7 @@ int main(){
         {
         case '1':
             //Nueva partida
-<<<<<<< HEAD
-            //cargar los csv y hacer conexiones. hacerlo en un condicional para que ocurra una sola vez
-            leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
-            leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
-            asignar_mobs(juego, mobs);
-
             printf("INDIQUE EL NOMBRE DEL NUEVO JUGADOR: ");
-=======
-            printf("Indeque el nombre del nuevo jugador:");
->>>>>>> 0e42c6fce291e22b0cc235e78a3a68dcf075096c
             scanf(" %49s", name);
             getchar();
             player = createPlayer(name, juego);
@@ -309,17 +300,10 @@ void leer_escenarios(HashMap * juego){
         strncpy(escenario->nombre, campos[1], sizeof(escenario->nombre));
         strncpy(escenario->leyenda, campos[2], sizeof(escenario->leyenda));
 
-<<<<<<< HEAD
-        strcpy(escenario->id_arriba, campos[5]);
-        strcpy(escenario->id_abajo, campos[6]);
-        strcpy(escenario->id_izquierda, campos[3]);
-        strcpy(escenario->id_derecha, campos[4]);
-=======
         strcpy(escenario->id_izquierda, campos[3]);
         strcpy(escenario->id_derecha, campos[4]);
         strcpy(escenario->id_arriba, campos[5]);
         strcpy(escenario->id_abajo, campos[6]);
->>>>>>> 0e42c6fce291e22b0cc235e78a3a68dcf075096c
 
         strncpy(escenario->dificultad, campos[7], sizeof(escenario->dificultad));
 
@@ -776,6 +760,7 @@ bool ataque(Jugador * player, Enemigo * enemigo){
     }
     if (enemigo->vida <= 0){
         puts("El enemigo ha sido derrotado!");
+        player->experiencia+= enemigo->exp_dada;
         //recoger_items_enemigos(player, enemigo);
         return false;
     }
@@ -845,18 +830,12 @@ bool cicloPelea(Jugador * player, List * enemigos)
     bool EnemigoVivo = true; // Variable para controlar si el enemigo está activo
     while(EnemigoVivo && player->vida > 0) {
         limpiarPantalla();
-<<<<<<< HEAD
-        printf("JUGADOR: %s | VIDA: %d | ESTAMINA: %d | ATAQUE: %d | DEFENSA: %d\n",
-            player->nombre, player->vida, player->estamina, player->ataque, player->defensa);
-        printf("ENEMIGO: %s | VIDA: %d | DEFENSA: %d\n",
-=======
         
         calcularEstatsT(player);
         
         printf("Jugador: %s | Vida: %d | Estamina: %d | Ataque: %d | Defensa: %d\n",
             player->nombre, player->vida, player->estamina, player->ataque_total, player->defensa_total);
         printf("Enemigo: %s | Vida: %d | Defensa: %d\n",
->>>>>>> 0e42c6fce291e22b0cc235e78a3a68dcf075096c
             enemigo->nombre, enemigo->vida, enemigo->defensa);
         
         menuOpcionesPelea(); // Muestra el menú de opciones de pelea
