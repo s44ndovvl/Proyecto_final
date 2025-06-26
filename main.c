@@ -127,7 +127,10 @@ bool huida(Jugador *, Enemigo *);
 bool cicloPelea(Jugador * , List * );
 
 void seleccionOpcion(Jugador * );
-void seleccionOpcionAyuda();
+//void seleccionOpcionAyuda();
+
+void movermeDeEscenario(Jugador * );
+void lvlup(Jugador * );
 
 /**********************************************/
 /*                    Main                    */
@@ -169,7 +172,7 @@ int main(){
             break;
         case '2':
             //Ayuda
-            seleccionOpcionAyuda();
+            //seleccionOpcionAyuda();
             break;
         case '3':
             //Creditos
@@ -278,7 +281,7 @@ void menuOpcionesPelea()
 /**********************************************/
 
 void leer_escenarios(HashMap * juego){
-    FILE *archivo = fopen("data/mapa.csv", "r");
+    FILE *archivo = fopen("data/Mapa1.csv", "r");
     if (archivo == NULL){
         perror("Error al abrir el archivo");
         return;
@@ -891,9 +894,10 @@ void seleccionOpcion(Jugador * player)
         switch (op) {
             case '1':
                 //explorarZonas(); //FUNCIÓN PARA EXPLORAR LAS ZONAS
+                movermeDeEscenario(player);
                 break;
             case '2':
-                //verEstado(); //FUNCIÓN PARA VER EL ESTADO DEL JUGADOR
+                //verEstado(); //FUNCIÓN PARA VER EL INVENTARIO DEL JUGADOR
                 break;
             case '3':
                 //recolectarItems(); //FUNCIÓN PARA RECOLECTAR LOS ITEMS DE LA ZONA
@@ -912,32 +916,81 @@ void seleccionOpcion(Jugador * player)
     } // El bucle continuará mientras el jugador esté activo
 }
 
-void seleccionOpcionAyuda()
-{
-    char op;
-    do{
-        //Se muestra un menú principal y se selecciona una opción
-        mostrarMenuAyuda();
-        printf("INGRESE SU OPCION: ");
-        scanf(" %c", &op);
+void lvlup(Jugador *jugador) {
+    jugador->nivel++;
+    jugador->vida += 5; // Incrementa la vida al subir de nivel
+    jugador->ataque += 2; // Incrementa el ataque al subir de nivel
+    jugador->defensa += 1; // Incrementa la defensa al subir de nivel
+    printf("¡Felicidades! Has subido al nivel %d.\n", jugador->nivel);
+}
 
-        switch (op) {
-            case '1':
-                //Movimiento
+void movermeDeEscenario(Jugador *jugador)
+{
+    char direccion;
+    int movimiento = 0;
+
+    do {
+        limpiarPantalla();
+        printf("Estás en: %s\n", jugador->actual->nombre);
+        printf("¿A dónde deseas moverte?\n");
+
+        if (jugador->actual->arriba)
+            printf("  Arriba (w): %s\n", jugador->actual->arriba->nombre);
+        if (jugador->actual->abajo)
+            printf("  Abajo (s): %s\n", jugador->actual->abajo->nombre);
+        if (jugador->actual->izquierda)
+            printf("  Izquierda (a): %s\n", jugador->actual->izquierda->nombre);
+        if (jugador->actual->derecha)
+            printf("  Derecha (d): %s\n", jugador->actual->derecha->nombre);
+
+        printf("\nSolo se muestran las direcciones disponibles.\n");
+        printf("Ingrese dirección (w/a/s/d): ");
+        scanf(" %c", &direccion);
+
+        switch (direccion) {
+            case 'w':
+                if (jugador->actual->arriba) {
+                    jugador->actual = jugador->actual->arriba;
+                    movimiento = 1;
+                } else {
+                    printf("No puedes moverte en esa dirección.\n");
+                }
                 break;
-            case '2':
-                //Enemigos
+            case 'a':
+                if (jugador->actual->izquierda) {
+                    jugador->actual = jugador->actual->izquierda;
+                    movimiento = 1;
+                } else {
+                    printf("No puedes moverte en esa dirección.\n");
+                }
                 break;
-            case '3':
-                //Equipamento / Items
+            case 's':
+                if (jugador->actual->abajo) {
+                    jugador->actual = jugador->actual->abajo;
+                    movimiento = 1;
+                } else {
+                    printf("No puedes moverte en esa dirección.\n");
+                }
                 break;
-            case '4':
-                return;
+            case 'd':
+                if (jugador->actual->derecha) {
+                    jugador->actual = jugador->actual->derecha;
+                    movimiento = 1;
+                } else {
+                    printf("No puedes moverte en esa dirección.\n");
+                }
+                break;
             default:
-                printf("OPCION NO VALIDA.\n");
+                printf("Dirección inválida. Intenta nuevamente.\n");
                 break;
-        }  
-        presioneTeclaParaContinuar();
-    } while (op != 4);
-    
+        }
+
+        if (!movimiento) {
+            presioneTeclaParaContinuar();
+        }
+
+    } while (!movimiento);
+
+    printf("Te has movido a: %s\n", jugador->actual->nombre);
+    presioneTeclaParaContinuar();
 }
