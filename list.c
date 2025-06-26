@@ -144,3 +144,9 @@ int list_size(List *L) {
     }
     return contador;
 }
+
+void list_free(List *L) {
+    if (L == NULL) return;
+    list_clean(L);
+    free(L);
+}
