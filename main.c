@@ -134,7 +134,7 @@ void recoger_items_enemigo(Jugador *, Enemigo *);
 bool cicloPelea(Jugador * , List * );
 
 void seleccionOpcion(Jugador * );
-//void seleccionOpcionAyuda();
+void seleccionOpcionAyuda();
 
 void movermeDeEscenario(Jugador * );
 void lvlup(Jugador * );
@@ -183,7 +183,7 @@ int main(){
             break;
         case '2':
             //Ayuda
-            //seleccionOpcionAyuda();
+            seleccionOpcionAyuda();
             break;
         case '3':
             //Creditos
@@ -1134,6 +1134,58 @@ void seleccionOpcion(Jugador * player)
                 break;
             case '5':
                 //equipar_DesequiparItem(); //FUNCIÓN PARA EQUIPAR Y DESEQUIPAR ITEMS
+                return;
+            default:
+                printf("OPCION NO VALIDA.\n");
+                break;
+        }
+        presioneTeclaParaContinuar();
+    } // El bucle continuará mientras el jugador esté activo
+}
+
+void seleccionOpcionAyuda()
+{
+    char op;
+    while(1)
+    {
+        //Se muestra el menú y se pide una opción
+        mostrarMenuAyuda();
+        printf("INGRESE SU OPCION: ");
+        scanf(" %c", &op);
+
+        //Se realizan las acciones según la opción seleccionada
+        switch (op) {
+            case '1':
+                limpiarPantalla();
+                puts("========================================");
+                puts("               MOVIMIENTO               ");
+                puts("========================================");
+                printf("Para realizar movimientos por el mapa se debe selecionar la opcion (EXPLORAR ZONAS)\n");
+                printf("en donde dependiendo de las zonas adyacentes disponibles se podra explorar el mapa,\n");
+                printf("usando las letras (w/a/s/d) se podran realizar los movimientos por las distintas zonas.\n\n");
+                break;
+            case '2':
+                limpiarPantalla();
+                puts("========================================");
+                puts("                ENEMIGOS                ");
+                puts("========================================");
+                printf("Dentro del mundo de Falta XP extisten distintos enemigos desafiantes a los cuales tendras\n");
+                printf("que enfrentarte a lo largo de tu recorrido hacia la gloria, estos enemigos estan separados por\n");
+                printf("dificultad, sus dificultades son FACIL, MEDIO, DIFICIL y BOSS. A medida que recorras las tierras\n");
+                printf("la dificultad de los enemigos ira aumentando hasta llegar al dominio del Rey demonio. Cada enemigo\n");
+                printf("aparece aleatoriamente en el mapa dependiendo su dificultad. Ademas soltaran distintos items que\n");
+                printf("te ayudaran en tu aventura.\n\n");
+                break;
+            case '3':
+                limpiarPantalla();
+                puts("========================================");
+                puts("                EQUIPAMENTO             ");
+                puts("========================================");
+                printf("Dentro del juego existen distintos equipos que te ayudaran durante tu aventura como lo son las armaduras\n");
+                printf("y pociones las cuales tienen distintos efectos como curacion e inmunidad.\n\n");
+                break;
+            case '4':
+                printf("VOLVIENDO AL MENU PRINCIPAL.\n");
                 return;
             default:
                 printf("OPCION NO VALIDA.\n");
