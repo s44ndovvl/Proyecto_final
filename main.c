@@ -123,6 +123,8 @@ void reiniciarArmadura(Armadura * );
 void ataqueEnemigo(Jugador * , Enemigo * );
 
 bool huida(Jugador *, Enemigo *);
+void guardar_item(Inventario * , void * );
+void recoger_items_enemigo(Jugador *, Enemigo *);
 
 bool cicloPelea(Jugador * , List * );
 
@@ -189,7 +191,185 @@ int main(){
         }
         presioneTeclaParaContinuar();
     }while(op!= '4');
-    return 0;
+}
+
+void guardar_item(Inventario * inv, void * item){
+    if (!item) return;
+
+    // Comprobamos si es poción
+    Pocion *poc = (Pocion *)item;
+    if (strcmp(poc->efecto, "Vida") == 0 || strcmp(poc->efecto, "Inmunidad") || 
+    strcmp(poc->efecto, "Escudo") || strcmp(poc->efecto, "Estamina")){
+        list_pushBack(inv->pocion, poc);
+    }
+
+    // Comprobamos si es arma
+    Arma * arma = (Arma *)item;
+    if (arma->ataque > 0 && arma->durabilidad > 0){
+        printf("Arma actual: %s (Ataque: %d, Durabilidad: %d)\n", inv->armas.nombre, inv->armas.ataque, inv->armas.durabilidad);
+        printf("Nueva arma:  %s (Ataque: %d, Durabilidad: %d)\n", arma->nombre, arma->ataque, arma->durabilidad);
+        printf("¿Deseas reemplazar tu arma actual? (1 = Sí, 0 = No): ");
+        int decision;
+        scanf("%d", &decision);
+        if (decision == 1) {
+            inv->armas = *arma;
+            printf("Has reemplazado tu arma con éxito.\n");
+        } else {
+            printf("No se reemplazó el arma.\n");
+        }
+        return;
+    }
+
+    //Comprobamos si es armadura
+    Armadura * armadura = (Armadura *)item;
+    Armadura * actual = NULL;
+    if(strcmp(armadura->tipo, "Casco") == 0) actual = &inv->casco;
+    else if (strcmp(armadura->tipo, "Pechera") == 0) actual = &inv->pechera;
+    else if (strcmp(armadura->tipo, "Guantes") == 0) actual = &inv->guantes;
+    else if (strcmp(armadura->tipo, "Pantalones") == 0) actual = &inv->pantalones;
+    else if (strcmp(armadura->tipo, "Botas") == 0) actual = &inv->botas;
+
+    if (actual) {
+        printf("\n[%s]\n", armadura->tipo);
+        printf("Armadura actual: %s (Defensa: %d, Durabilidad: %d)\n", actual->nombre, actual->defensa, actual->durabilidad);
+        printf("Nueva armadura:  %s (Defensa: %d, Durabilidad: %d)\n", armadura->nombre, armadura->defensa, armadura->durabilidad);
+        printf("¿Deseas reemplazar esta armadura? (1 = Sí, 0 = No): ");
+        int decision;
+        scanf("%d", &decision);
+        if (decision == 1) {
+            *actual = *armadura;
+            printf("Has reemplazado la armadura con éxito.\n");
+        } else {
+            printf("No se reemplazó la armadura.\n");
+        }
+    }
+}
+
+void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
+    limpiarPantalla();
+
+    Inventario *loot = &enemigo->item;
+
+    // Crear lista con los 7 ítems fijos
+    void *items_fijos[7];
+    int total_fijos = 0;
+
+    // Copiar arma
+    Arma *arma = malloc(sizeof(Arma));
+    *arma = loot->armas;
+    items_fijos[total_fijos++] = arma;
+
+    // Copiar armaduras
+    Armadura *casco = malloc(sizeof(Armadura)); 
+    *casco = loot->casco; items_fijos[total_fijos++] = casco;
+    Armadura *guantes = malloc(sizeof(Armadura)); 
+    *guantes = loot->guantes; items_fijos[total_fijos++] = guantes;
+    Armadura *pechera = malloc(sizeof(Armadura)); 
+    *pechera = loot->pechera; items_fijos[total_fijos++] = pechera;
+    Armadura *pantalones = malloc(sizeof(Armadura)); 
+    *pantalones = loot->pantalones; items_fijos[total_fijos++] = pantalones;
+    Armadura *botas = malloc(sizeof(Armadura)); 
+    *botas = loot->botas; items_fijos[total_fijos++] = botas;
+
+    // Copiar poción (si existe)
+    Pocion *p = list_first(loot->pocion);
+    if (p) {
+        Pocion *pocion = malloc(sizeof(Pocion));
+        *pocion = *p;
+        items_fijos[total_fijos++] = pocion;
+    }
+
+    // Mezclar los ítems
+    srand(time(NULL));
+    for (int i = total_fijos - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        void *tmp = items_fijos[i];
+        items_fijos[i] = items_fijos[j];
+        items_fijos[j] = tmp;
+    }
+
+    // Elegir cuántos mostrar (entre 1 y 7)
+    int cantidad_a_mostrar = (rand() % total_fijos) + 1;
+
+    List *items_posibles = list_create();
+    for (int i = 0; i < cantidad_a_mostrar; i++) {
+        list_pushBack(items_posibles, items_fijos[i]);
+    }
+
+    while (1) {
+        limpiarPantalla();
+        puts("=== OBJETOS DEL ENEMIGO ===");
+
+        int index = 1;
+        void *objeto = list_first(items_posibles);
+        List *temp = list_create();
+
+        while (objeto != NULL) {
+            list_pushBack(temp, objeto);
+
+            // Mostrar con tipo según posición
+            if (index == 1) {
+                Arma *a = objeto;
+                printf("%d) [ARMA] %s - Ataque: %d - Durabilidad: %d\n", index, a->nombre, a->ataque, a->durabilidad);
+            } else if (index >= 2 && index <= 6) {
+                Armadura *arm = objeto;
+                printf("%d) [ARMADURA] %s - Defensa: %d - Durabilidad: %d\n", index, arm->nombre, arm->defensa, arm->durabilidad);
+            } else {
+                Pocion *poc = objeto;
+                printf("%d) [POCIÓN] %s - %s (%d)\n", index, poc->nombre, poc->efecto, poc->valor);
+            }
+
+            index++;
+            objeto = list_next(items_posibles);
+        }
+
+        printf("%d) TOMAR TODO\n", index);
+        printf("%d) CANCELAR\n", index + 1);
+        printf("\nSELECCIONE UNA OPCIÓN: ");
+        
+        int opcion;
+        scanf("%d", &opcion);
+
+        if (opcion == index + 1 || opcion <= 0) {
+            puts("CANCELANDO O OPCIÓN INVÁLIDA");
+            presioneTeclaParaContinuar();
+            break;
+        }
+
+        if (opcion == index) {
+            for (void *elemento = list_first(items_posibles); elemento != NULL; elemento = list_next(items_posibles)) {
+                guardar_item(&player->inventario, elemento);
+            }
+            puts("HAS RECOGIDO TODOS LOS OBJETOS");
+            presioneTeclaParaContinuar();
+            break;
+        } else {
+            int actual = 1;
+            void *item = list_first(temp);
+            while (item != NULL && actual < opcion) {
+                item = list_next(temp);
+                actual++;
+            }
+
+            if (item != NULL) {
+                guardar_item(&player->inventario, item);
+
+                // reconstruir lista sin el ítem tomado
+                List *nueva = list_create();
+                for (void *it = list_first(items_posibles); it != NULL; it = list_next(items_posibles)) {
+                    if (it != item) list_pushBack(nueva, it);
+                }
+
+                list_clean(items_posibles);
+                for (void *it = list_first(nueva); it != NULL; it = list_next(nueva)) {
+                    list_pushBack(items_posibles, it);
+                }
+
+                puts("Objeto recogido con éxito.");
+                presioneTeclaParaContinuar();
+            }
+        }
+    }
 }
 
 /**********************************************/
