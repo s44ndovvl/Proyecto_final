@@ -81,7 +81,8 @@ Este sistema ha sido desarrollado en lenguaje C y puede ejecutarse fácilmente u
 
 ## Ejemplo de uso
 
-# Paso :
+# Paso 1: Ayuda
+
 # Paso :
 # paso intermedio:
 # Paso :
