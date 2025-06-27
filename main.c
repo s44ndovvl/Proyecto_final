@@ -139,6 +139,8 @@ void seleccionOpcionAyuda();
 void movermeDeEscenario(Jugador * );
 void lvlup(Jugador * );
 
+void verEstado(Jugador * );
+
 /**********************************************/
 /*                    Main                    */
 /**********************************************/
@@ -215,6 +217,9 @@ void mostrarCreditos()
         "",
         "Director: Eduardo Sandoval",
         "Productor: Joaquin Contreras",
+        "Gestor de Calidad: Brandon Caceres",
+        "Responsable de Integracion: Josue Huaiquil",
+        "Coordinador: Eduardo Sandoval"
         "Creacion de Enemigos: Brandon Caceres",
         "Interface Designer: Josue Huaiquil", "",
         "Equipo de Programacion:",
@@ -268,7 +273,7 @@ void mostrarMenuJuego(){
     puts("========================================");
   
     puts("1) EXPLORAR ZONAS"); //explorar-zona
-    puts("2) VER INVENTARIO"); //explorar-zona
+    puts("2) VER ESTADO DEL JUGADOR"); //explorar-zona
     puts("3) ATACAR A UN ENEMIGO"); //atacar-enemigo
     // POSIBLE guardar partida
     puts("4) SALIR AL MENU PRINCIPAL");
@@ -681,14 +686,14 @@ void guardar_item(Inventario * inv, void * item, int tipo){
         if (arma->ataque > 0 && arma->durabilidad > 0){
             printf("Arma actual: %s (Ataque: %d, Durabilidad: %d)\n", inv->armas.nombre, inv->armas.ataque, inv->armas.durabilidad);
             printf("Nueva arma:  %s (Ataque: %d, Durabilidad: %d)\n", arma->nombre, arma->ataque, arma->durabilidad);
-            printf("¿Deseas reemplazar tu arma actual? (1 = Sí, 0 = No): ");
+            printf("Deseas reemplazar tu arma actual? (1 = SI, 0 = NO): ");
             int decision;
             scanf("%d", &decision);
             if (decision == 1) {
                 inv->armas = *arma;
-                printf("Has reemplazado tu arma con éxito.\n");
+                printf("Has reemplazado tu arma con exito.\n");
             } else {
-                printf("No se reemplazó el arma.\n");
+                printf("No se reemplazo el arma.\n");
             }
             return;
         }
@@ -708,14 +713,14 @@ void guardar_item(Inventario * inv, void * item, int tipo){
             printf("\n[%s]\n", armadura->tipo);
             printf("Armadura actual: %s (Defensa: %d, Durabilidad: %d)\n", actual->nombre, actual->defensa, actual->durabilidad);
             printf("Nueva armadura:  %s (Defensa: %d, Durabilidad: %d)\n", armadura->nombre, armadura->defensa, armadura->durabilidad);
-            printf("¿Deseas reemplazar esta armadura? (1 = Sí, 0 = No): ");
+            printf("Deseas reemplazar esta armadura? (1 = SI, 0 = NO): ");
             int decision;
             scanf("%d", &decision);
             if (decision == 1) {
                 *actual = *armadura;
-                printf("Has reemplazado la armadura con éxito.\n");
+                printf("Has reemplazado la armadura con exito.\n");
             } else {
-                printf("No se reemplazó la armadura.\n");
+                printf("No se reemplazo la armadura.\n");
             }
         }
     }
@@ -812,7 +817,7 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
                 printf("%d) [ARMADURA] %s - Defensa: %d - Durabilidad: %d\n", index, arm->nombre, arm->defensa, arm->durabilidad);
             } else if (item->tipo == 2) {
                 Pocion *poc = (Pocion *)item->ptr;
-                printf("%d) [POCIÓN] %s - %s (%d)\n", index, poc->nombre, poc->efecto, poc->valor);
+                printf("%d) [POCION] %s - %s (%d)\n", index, poc->nombre, poc->efecto, poc->valor);
             }
             index++;
             objeto = list_next(items_posibles);
@@ -820,14 +825,14 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
 
         printf("%d) TOMAR TODO\n", index);
         printf("%d) CANCELAR\n", index + 1);
-        printf("\nSELECCIONE UNA OPCIÓN: ");
+        printf("\nSELECCIONE UNA OPCION: ");
         
         int opcion;
         scanf("%d", &opcion);
 
         if (opcion == index + 1 || opcion <= 0) {
-            puts("CANCELANDO O OPCIÓN INVÁLIDA");
-            presioneTeclaParaContinuar();
+            puts("CANCELANDO O OPCION INVALIDA");
+            //presioneTeclaParaContinuar();
             break;
         }
 
@@ -838,7 +843,7 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
                 free(elemento);
             }
             puts("HAS RECOGIDO TODOS LOS OBJETOS");
-            presioneTeclaParaContinuar();
+            //presioneTeclaParaContinuar();
             break;
         } else {
             int actual = 1;
@@ -863,8 +868,8 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
                 list_free(items_posibles); // Libera la lista anterior completamente
                 items_posibles = nueva;    // Usa la nueva lista
 
-                puts("Objeto recogido con éxito.");
-                presioneTeclaParaContinuar();
+                puts("Objeto recogido con exito.");
+                //presioneTeclaParaContinuar();
             }
         }
     }
@@ -1138,7 +1143,7 @@ void seleccionOpcion(Jugador * player)
                 movermeDeEscenario(player);
                 break;
             case '2':
-                //verEstado(); //FUNCIÓN PARA VER EL INVENTARIO DEL JUGADOR
+                verEstado(player); //FUNCIÓN PARA VER EL ESTADO E INVENTARIO DEL JUGADOR
                 break;
             case '3':
                 jugadorVivo = cicloPelea(player, player->actual->Enemigos); // Ciclo de pelea con los enemigos de la zona actual
@@ -1157,9 +1162,10 @@ void seleccionOpcion(Jugador * player)
 void seleccionOpcionAyuda()
 {
     char op;
+    int cantidad;
     while(1)
     {
-        //Se muestra el menú y se pide una opción
+        //Se muestra el menú de ayuda y se pide una opción
         mostrarMenuAyuda();
         printf("INGRESE SU OPCION: ");
         scanf(" %c", &op);
@@ -1168,37 +1174,76 @@ void seleccionOpcionAyuda()
         switch (op) {
             case '1':
                 limpiarPantalla();
+
                 puts("========================================");
-                puts("               MOVIMIENTO               ");
+                puts("              MOVIMIENTOS                ");
                 puts("========================================");
-                printf("Para realizar movimientos por el mapa se debe selecionar la opcion (EXPLORAR ZONAS)\n");
-                printf("en donde dependiendo de las zonas adyacentes disponibles se podra explorar el mapa,\n");
-                printf("usando las letras (w/a/s/d) se podran realizar los movimientos por las distintas zonas.\n\n");
+                
+                const char* movimiento[] = {
+                    "Para avanzar en tu aventura, selecciona la opcion (EXPLORAR ZONAS) desde el menu de juego.",
+                    "Dependiendo de las zonas disponibles, podras moverte por el mapa utilizando las teclas:",
+                    "    W - Arriba", "    A - Izquierda", "    S - Abajo", "    D - Derecha",
+                    "Cada zona oculta secretos, enemigos o tesoros. Piensa bien cada paso...",
+                    "en Umbrahal, el peligro acecha en cada rincon.", ""
+                };
+
+                cantidad = sizeof(movimiento) / sizeof(movimiento[0]);
+
+                for (int i = 0; i < cantidad; i++) {
+                    printf("%s\n", movimiento[i]);
+                    esperar(1);         // Espera 1 segundos
+                }
                 break;
             case '2':
                 limpiarPantalla();
                 puts("========================================");
                 puts("                ENEMIGOS                ");
                 puts("========================================");
-                printf("Dentro del mundo de Falta XP extisten distintos enemigos desafiantes a los cuales tendras\n");
-                printf("que enfrentarte a lo largo de tu recorrido hacia la gloria, estos enemigos estan separados por\n");
-                printf("dificultad, sus dificultades son FACIL, MEDIO, DIFICIL y BOSS. A medida que recorras las tierras\n");
-                printf("la dificultad de los enemigos ira aumentando hasta llegar al dominio del Rey demonio. Cada enemigo\n");
-                printf("aparece aleatoriamente en el mapa dependiendo su dificultad. Ademas soltaran distintos items que\n");
-                printf("te ayudaran en tu aventura.\n\n");
+
+                const char* enemigos[] = {
+                    "En las profundidades de Umbrahal, te enfrentaras a criaturas del inframundo que buscan detenerte.",
+                    "Estos enemigos varian en dificultad: FACIL, MEDIO, DIFICIL y el temible BOSS.", "",
+                    "A medida que avances por los pisos de la masmorra, los enemigos se volveran mas agresivos y letales.",
+                    "Cada encuentro será un reto, y solo los más preparados sobrevivirán. Los enemigos aparecen de forma",
+                    "aleatoria, y su dificultad dependera del area en la que te encuentres.", "",
+                    "Derrotarlos no solo sera necesario para sobrevivir, tambien puede recompensarte con items valiosos",
+                    "que podrian cambiar el curso de tu destino.", ""
+                };
+
+                cantidad = sizeof(enemigos) / sizeof(enemigos[0]);
+
+                for (int i = 0; i < cantidad; i++) {
+                    printf("%s\n", enemigos[i]);
+                    esperar(1);         // Espera 1 segundos
+                }
                 break;
             case '3':
                 limpiarPantalla();
                 puts("========================================");
                 puts("                EQUIPAMENTO             ");
                 puts("========================================");
-                printf("Dentro del juego existen distintos equipos que te ayudaran durante tu aventura como lo son las armaduras\n");
-                printf("y pociones las cuales tienen distintos efectos como curacion e inmunidad.\n\n");
+                
+                const char* equip[] = {
+                    "En tu descenso por la Masmorra de Umbrahal, encontraras items esenciales que marcaran la diferencia",
+                    "entre la vida y la muerte.", "",
+                    "Las armaduras te otorgan proteccion contra los ataques del inframundo, reduciendo el daño recibido.",
+                    "Las pociones restauran salud o brindan efectos temporales como inmunidad o estamina.", "",
+                    "Explora bien cada escenario. El equipamiento correcto puede ser la clave para sobrevivir... o caer.", ""
+                };
+
+                cantidad = sizeof(equip) / sizeof(equip[0]);
+
+                for (int i = 0; i < cantidad; i++) {
+                    printf("%s\n", equip[i]);
+                    esperar(1);         // Espera 1 segundos
+                }
                 break;
             case '4':
+                limpiarPantalla();
                 printf("VOLVIENDO AL MENU PRINCIPAL.\n");
                 return;
             default:
+                limpiarPantalla();
                 printf("OPCION NO VALIDA.\n");
                 break;
         }
@@ -1221,57 +1266,61 @@ void movermeDeEscenario(Jugador *jugador)
 
     do {
         limpiarPantalla();
-        printf("Estás en: %s\n", jugador->actual->nombre);
-        printf("¿A dónde deseas moverte?\n");
+        printf("Estas en: %s\n", jugador->actual->nombre);
+        printf("A donde deseas moverte?\n");
 
         if (jugador->actual->arriba)
-            printf("  Arriba (w): %s\n", jugador->actual->arriba->nombre);
+            printf("- Arriba (w): %s\n", jugador->actual->arriba->nombre);
         if (jugador->actual->abajo)
-            printf("  Abajo (s): %s\n", jugador->actual->abajo->nombre);
+            printf("- Abajo (s): %s\n", jugador->actual->abajo->nombre);
         if (jugador->actual->izquierda)
-            printf("  Izquierda (a): %s\n", jugador->actual->izquierda->nombre);
+            printf("- Izquierda (a): %s\n", jugador->actual->izquierda->nombre);
         if (jugador->actual->derecha)
-            printf("  Derecha (d): %s\n", jugador->actual->derecha->nombre);
+            printf("- Derecha (d): %s\n", jugador->actual->derecha->nombre);
 
         printf("\nSolo se muestran las direcciones disponibles.\n");
-        printf("Ingrese dirección (w/a/s/d): ");
+        printf("Ingrese direccion (w/a/s/d): ");
         scanf(" %c", &direccion);
 
         switch (direccion) {
             case 'w':
+            case 'W':
                 if (jugador->actual->arriba) {
                     jugador->actual = jugador->actual->arriba;
                     movimiento = 1;
                 } else {
-                    printf("No puedes moverte en esa dirección.\n");
+                    printf("No puedes moverte en esa direccion.\n");
                 }
                 break;
             case 'a':
+            case 'A':
                 if (jugador->actual->izquierda) {
                     jugador->actual = jugador->actual->izquierda;
                     movimiento = 1;
                 } else {
-                    printf("No puedes moverte en esa dirección.\n");
+                    printf("No puedes moverte en esa direccion.\n");
                 }
                 break;
             case 's':
+            case 'S':
                 if (jugador->actual->abajo) {
                     jugador->actual = jugador->actual->abajo;
                     movimiento = 1;
                 } else {
-                    printf("No puedes moverte en esa dirección.\n");
+                    printf("No puedes moverte en esa direccion.\n");
                 }
                 break;
             case 'd':
+            case 'D':
                 if (jugador->actual->derecha) {
                     jugador->actual = jugador->actual->derecha;
                     movimiento = 1;
                 } else {
-                    printf("No puedes moverte en esa dirección.\n");
+                    printf("No puedes moverte en esa direccion.\n");
                 }
                 break;
             default:
-                printf("Dirección inválida. Intenta nuevamente.\n");
+                printf("Direccion invalida. Intenta nuevamente.\n");
                 break;
         }
 
@@ -1280,7 +1329,39 @@ void movermeDeEscenario(Jugador *jugador)
         }
 
     } while (!movimiento);
+    limpiarPantalla();
+    puts("========================================");
+    puts("               FALTA XP");
+    puts("========================================");
+    printf("Te has movido a: %s\n\n", jugador->actual->nombre);
+}
 
-    printf("Te has movido a: %s\n", jugador->actual->nombre);
-    presioneTeclaParaContinuar();
+void verEstado(Jugador *player)
+{
+    int n = 0;
+    limpiarPantalla();
+    puts("========================================");
+    puts("           ESTADO DEL JUGADOR           ");
+    puts("========================================");
+    printf("Jugador: %s | Vida: %d | Estamina: %d | Ataque: %d | Defensa: %d | Nivel: %d\n",
+            player->nombre, player->vida, player->estamina, player->ataque_total, player->defensa_total, 
+            player->nivel);
+    printf("Te encuentras en: %s\n", player->actual->nombre);
+    printf("[ARMA]: %s\n", player->inventario.armas.nombre);
+    printf("[CASCO]: %s\n", player->inventario.casco.nombre);
+    printf("[PECHERA]: %s\n", player->inventario.pechera.nombre);
+    printf("[GUANTES]: %s\n", player->inventario.guantes.nombre);
+    printf("[PANTALON]: %s\n", player->inventario.pantalones.nombre);
+    printf("[POCIONES]:\n");
+    void *dato = list_first(player->inventario.pocion);
+    if (!dato) {
+        printf("No tienes pociones.\n");
+    } else {
+        int i = 1;
+        while (dato != NULL) {
+            Pocion *p = (Pocion *)dato;
+            printf("%d) %s | Efecto: %s | Valor: %d\n", i++, p->nombre, p->efecto, p->valor);
+            dato = list_next(player->inventario.pocion);
+        }
+    }
 }
