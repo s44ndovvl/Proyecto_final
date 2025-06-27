@@ -1,18 +1,18 @@
 ID, Nombre, leyenda, izquierda, derecha, arriba, abajo, dificultad
-1, Sala Principal 1,, 0, 0, 0, 2, Facil
-2, Sala Principal 2,, 15, 0, 1, 3, Facil
-3, Sala Principal 3,, 11, 0, 2, 4, Facil
-4, Sala Principal 4,, 0, 0, 3, 5, Facil
-5, Sala Principal 5,, 0, 12, 4, 6, Facil
-6, Sala Principal 6,, 0, 16, 5, 7, Media
-7, Sala Principal 7,, 13, 0, 6, 8, Media
-8, Sala Principal 8,, 17, 0, 7, 9, Dificil
-9, Sala Principal 9,, 0, 14, 8, 10, Dificil
-10, Sala Principal 10,, 0, 0, 9, 0, Boss
-11, Sala Secundaria de 3,, 0, 3, 0, 0, Media
-12, Sala Secundaria de 5,, 5, 0, 0, 0, Media
-13, Sala Secundaria de 7,, 0, 7, 0, 0, Media
-14, Sala Secundaria de 9,, 9, 0, 0, 0, Dificil
-15, Sala Secundaria de 2,, 0, 2, 0, 0, Media
-16, Sala Secundaria de 6,, 6, 0, 0, 0, Media
-17, Sala Secundaria de 8,, 0, 8, 0, 0, Dificil
+1, Entrada al Abismo,Un antiguo altar marcado por runas olvidadas. El aire vibra de magia.,0,0,0,2, Facil
+2, Pasillo de los Susurros,Las paredes murmuran secretos en lenguas que no comprendes.,15,0,1,3, Facil
+3, Caverna del Eco Perdido,Tus pasos resuenan eternamente. Algo te observa desde las sombras.,11,0,2,4, Facil
+4, Galería de Sangre Seca,El suelo está manchado. Aquí cayeron héroes... y algo más los arrastró.,0,0,3,5, Facil
+5, Foso de los Olvidados,Cuerpos vacíos descansan aquí. Sus almas... quizás no tanto.,0,12,4,6, Facil
+6, Salón de Cenizas,Una neblina gris flota. Todo aquí ha sido reducido a polvo.,0,16,5,7, Media
+7, Cripta del Guardián,Un ser ancestral protege este umbral. Su juicio será implacable.,13,0,6,8, Media
+8, Santuario Corrompido,Un templo profanado. Energías demoníacas vibran en cada rincón.,17,0,7,9, Dificil
+9, Antesala del Vacío,Frente a ti se abre el abismo. Solo queda avanzar… o morir aquí.,0,14,8,10, Dificil
+10, Trono del Rey Demonio,La cámara final. Él te espera... sabiendo que caerás como los demás.,0,0,9,0, Boss
+11, Sala de Entrenamiento,Aquí los iniciados enfrentaban simulacros de demonios.,0,3,0,0, Media
+12, Cripta de Ecos Muertos,Susurros apagados resuenan entre lápidas polvorientas.,5,0,0,0, Media
+13, Cámaras de Pruebas Arcanas,Selladas por los antiguos... aún guardan artefactos peligrosos.,0,7,0,0, Media
+14, Sótano de Runas Quebradas,Las piedras talladas vibran... pero sus símbolos están rotos.,9,0,0,0, Dificil
+15, Túnel de las Voces Caídas,Quienes entran aquí escuchan su propio final... antes de tiempo.,0,2,0,0, Media
+16, Santuario de Luz Marchita,Un lugar sagrado... ahora desprovisto de todo calor divino.,6,0,0,0, Media
+17, Refugio del Caminante,Un rincón fuera del tiempo donde los viajeros pueden tomar aliento.,0,8,0,0, Dificil
