@@ -82,7 +82,7 @@ typedef struct{
 
     Escenarios *actual;
     Inventario inventario;
-    bool inmunidad;
+    int inmunidad;
 }Jugador;
 
 typedef struct{
@@ -201,6 +201,469 @@ int main(){
         presioneTeclaParaContinuar();
     }while(op!= '4');
 }
+
+/**********************************************/
+/*            Mostrar creditos                */
+/**********************************************/
+
+void mostrarCreditos()
+{
+    limpiarPantalla();
+    const char* creditos[] = {
+        "Falta Creatividad Studios Presenta:",
+        "Falta XP",
+        "",
+        "Director: Eduardo Sandoval",
+        "Productor: Joaquin Contreras",
+        "Creacion de Enemigos: Brandon Caceres",
+        "Interface Designer: Josue Huaiquil", "",
+        "Equipo de Programacion:",
+        "Eduardo Sandoval",
+        "Joaquin Contreras",
+        "Brandon Caceres",
+        "Josue Huaiquil", "",
+        "Gracias por jugar Falta XP!"
+    };
+
+    int cantidad = sizeof(creditos) / sizeof(creditos[0]);
+
+    for (int i = 0; i < cantidad; i++) {
+        printf("%s\n", creditos[i]);
+        esperar(1);         // Espera 1 segundos
+    }
+}
+
+/**********************************************/
+/*               Mostrar menus                */
+/**********************************************/
+
+void mostrarMenuAyuda() {
+    limpiarPantalla();
+    puts("========================================");
+    puts("              MENU DE AYUDA                  ");
+    puts("========================================");
+  
+    puts("1) SOBRE LOS MOVIMIENTOS");
+    puts("2) SOBRE LOS ENEMIGOS");
+    puts("3) SOBRE EL EQUIPAMENTO");
+    puts("4) VOLVER AL MENU PRINCIPAL");
+}
+
+void mostrarMenuPrincipal() {
+    limpiarPantalla();
+    puts("========================================");
+    puts("               FALTA XP                ");
+    puts("========================================");
+  
+    puts("1) INICIAR NUEVA PARTIDA");
+    puts("2) AYUDA");
+    puts("3) CREDITOS");
+    puts("4) SALIR");
+}
+
+void mostrarMenuJuego(){
+    limpiarPantalla();
+    puts("========================================");
+    puts("               FALTA XP                ");
+    puts("========================================");
+  
+    puts("1) EXPLORAR ZONAS"); //explorar-zona
+    puts("2) VER INVENTARIO"); //explorar-zona
+    puts("3) ATACAR A UN ENEMIGO"); //atacar-enemigo
+    // POSIBLE guardar partida
+    puts("4) SALIR AL MENU PRINCIPAL");
+}
+
+void menuOpcionesPelea()
+{
+    puts("========================================");
+    puts("              MENU DE PELEA                   ");
+    puts("========================================");
+    puts("1) ATACAR AL ENEMIGO");
+    puts("2) USAR POCION");
+    puts("3) HUIR DE LA PELEA");
+    puts("=========================================");
+}
+
+/**********************************************/
+/*                  Leer CSVs                 */
+/**********************************************/
+
+void leer_escenarios(HashMap * juego){
+    FILE *archivo = fopen("data/mapa.csv", "r");
+    if (archivo == NULL){
+        perror("Error al abrir el archivo");
+        return;
+    }
+
+    char **campos;
+    campos = leer_linea_csv(archivo, ',');
+
+    while ((campos = leer_linea_csv(archivo, ',')) != NULL){
+        Escenarios * escenario = (Escenarios*)malloc(sizeof(Escenarios));
+        //Inicializa los punteros de direccion a NULL para evitar punteros basura
+        escenario->arriba = NULL;
+        escenario->abajo = NULL;
+        escenario->izquierda = NULL;
+        escenario->derecha = NULL;
+        
+        //Copia los datos del CSV a la estructura del escenario
+        strncpy(escenario->id, campos[0], sizeof(escenario->id));
+        strncpy(escenario->nombre, campos[1], sizeof(escenario->nombre));
+        strncpy(escenario->leyenda, campos[2], sizeof(escenario->leyenda));
+
+        strcpy(escenario->id_izquierda, campos[3]);
+        strcpy(escenario->id_derecha, campos[4]);
+        strcpy(escenario->id_arriba, campos[5]);
+        strcpy(escenario->id_abajo, campos[6]);
+
+        strncpy(escenario->dificultad, campos[7], sizeof(escenario->dificultad));
+
+        insertMap(juego, escenario->id, escenario);
+
+    }
+    fclose(archivo);
+
+    // Segunda pasada: establecer los punteros de dirección entre escenarios
+    List * claves = list_create();
+    Pair * par = firstMap(juego);
+    while (par != NULL) {
+        list_pushBack(claves, par->key);
+        par = nextMap(juego);
+    }
+
+    // Ahora recorremos esa lista para validar enlaces sin afectar el iterador de juego
+    for (char * clave = list_first(claves); clave != NULL; clave = list_next(claves)) {
+        Pair * pEscenario = searchMap(juego, clave);
+        if (!pEscenario) continue;
+
+        Escenarios * escenario = (Escenarios*)pEscenario->value;
+
+        if (strcmp(escenario->id_izquierda, "-1") != 0){
+            Pair * aux = searchMap(juego, escenario->id_izquierda);
+            if (aux != NULL) escenario->izquierda = (Escenarios*)aux->value;
+        }
+        if (strcmp(escenario->id_derecha, "-1") != 0){
+            Pair * aux = searchMap(juego, escenario->id_derecha);
+            if (aux != NULL) escenario->derecha = (Escenarios*)aux->value;
+        }
+        if (strcmp(escenario->id_arriba, "-1") != 0){
+            Pair * aux = searchMap(juego, escenario->id_arriba);
+            if (aux != NULL) escenario->arriba = (Escenarios*)aux->value;
+        }
+        if (strcmp(escenario->id_abajo, "-1") != 0){
+            Pair * aux = searchMap(juego, escenario->id_abajo);
+            if (aux != NULL) escenario->abajo = (Escenarios*)aux->value;
+        }
+    }
+
+    list_clean(claves);
+    free(claves);
+}
+
+void leer_mobs(HashMap *mobs) {
+    FILE *archivo = fopen("data/enemigos.csv", "r");
+    if (!archivo) {
+        perror("Error al abrir data/enemigos.csv");
+        return;
+    }
+
+    // 1) Saltar cabecera
+    char **campos = leer_linea_csv(archivo, ',');
+    (void)campos;  // ignoramos el resultado
+
+    // 2) Leer cada línea
+    while ((campos = leer_linea_csv(archivo, ',')) != NULL) {
+        Enemigo *e = malloc(sizeof(Enemigo));
+        if (!e) { perror("malloc"); break; }
+
+        // Rellenar campos básicos
+        strncpy(e->nombre,     campos[0], sizeof(e->nombre)-1);
+        strncpy(e->dificultad, campos[1], sizeof(e->dificultad)-1);
+        e->vida = atoi(campos[2]);
+        e->ataque = atoi(campos[3]);
+        e->defensa = atoi(campos[4]);
+        e->exp_dada = atoi(campos[5]);
+
+        // Inicializar inventario
+        // ----------------------------------------------------------------
+        //  Arma
+        char *tmp = strdup(campos[6]);
+        char *tok = strtok(tmp, ",");
+        strncpy(e->item.armas.nombre, tok, sizeof(e->item.armas.nombre)-1);
+        tok = strtok(NULL, ","); e->item.armas.ataque     = atoi(tok);
+        tok = strtok(NULL, ","); e->item.armas.durabilidad = atoi(tok);
+        free(tmp);
+
+        //  Armaduras (casco, guantes, pechera, pantalones, botas)
+        const int idx[5] = {7,8,9,10,11};
+        Armadura *pieces[5] = {
+            &e->item.casco,
+            &e->item.guantes,
+            &e->item.pechera,
+            &e->item.pantalones,
+            &e->item.botas
+        };
+        for (int i = 0; i < 5; i++) {
+            char *tmp = strdup(campos[idx[i]]);
+            char *tok = strtok(tmp, ",");
+
+            // separar tipo y nombre
+            char *sp = strchr(tok, ' ');
+            if (sp) {
+                *sp = '\0';
+                strncpy(pieces[i]->tipo,   tok,       sizeof(pieces[i]->tipo)-1);
+                strncpy(pieces[i]->nombre, sp+1,     sizeof(pieces[i]->nombre)-1);
+            } else {
+                strncpy(pieces[i]->tipo, tok,        sizeof(pieces[i]->tipo)-1);
+            }
+
+            // leer el resto de campos
+            tok = strtok(NULL, ","); pieces[i]->defensa    = atoi(tok);
+            tok = strtok(NULL, ","); pieces[i]->durabilidad = atoi(tok);
+            tok = strtok(NULL, ",");
+            tok = strtok(NULL, ","); pieces[i]->valor      = atoi(tok);
+
+            free(tmp);
+        }
+
+        //  Poción
+        e->item.pocion = list_create();
+        {
+            char *tmp = strdup(campos[12]);
+            char *tok = strtok(tmp, ",");
+            Pocion *p = malloc(sizeof(Pocion));
+            strncpy(p->nombre, tok, sizeof(p->nombre)-1);
+
+            tok = strtok(NULL, ",");
+            strncpy(p->efecto, tok, sizeof(p->efecto)-1);
+
+            tok = strtok(NULL, ",");
+            p->valor = atoi(tok);
+
+            list_pushBack(e->item.pocion, p);
+            free(tmp);
+        }
+        // ----------------------------------------------------------------
+
+        // Insertar en el HashMap
+        insertMap(mobs, e->nombre, e);
+    }
+
+    fclose(archivo);
+}
+
+/**********************************************/
+/*          Asignar mobs a escenarios         */
+/**********************************************/
+
+void asignar_mobs(HashMap * escenarios, HashMap * mobs){
+    for (Pair * esc = firstMap(escenarios); esc != NULL; esc = nextMap(escenarios)){
+        Escenarios * escenario = esc->value;
+
+        escenario->Enemigos = list_create();
+
+        for (Pair * par_mob = firstMap(mobs); par_mob != NULL; par_mob = nextMap(mobs)){
+            Enemigo * mob = par_mob->value;
+
+            if (strcmp(mob->dificultad, escenario->dificultad) == 0){
+                list_pushBack(escenario->Enemigos, mob);
+            }
+        }
+    }
+}
+
+void copiaArmadura(Armadura * seleccionado, Armadura * item){
+    strcpy(seleccionado->tipo, item->tipo);
+    strcpy(seleccionado->nombre, item->nombre);
+    seleccionado->defensa = item->defensa;
+    seleccionado->durabilidad = item->durabilidad;
+    strcpy(seleccionado->bufo, item->bufo);
+    seleccionado->valor = item->valor;
+}
+
+Enemigo * seleccionarEnemigo(List * enemigos){
+    if(enemigos == NULL){
+        return NULL;
+    }
+
+    int num_enemigos = 0;
+    for (Enemigo *mob = list_first(enemigos); mob != NULL; mob = list_next(enemigos)){
+        num_enemigos++;
+    }
+    if (num_enemigos == 0) return NULL; // No enemies to select, so return NULL
+
+    int index = rand() % num_enemigos;
+
+    int i = 0;
+    for (Enemigo *mob = list_first(enemigos); mob != NULL; mob = list_next(enemigos)){
+        if (i == index){
+            Enemigo * seleccionado = malloc(sizeof(Enemigo));
+            strcpy(seleccionado->nombre, mob->nombre);
+            strcpy(seleccionado->dificultad, mob->dificultad);
+
+            seleccionado->vida = mob->vida;
+            seleccionado->defensa = mob->defensa;
+            seleccionado->ataque = mob->ataque;
+            seleccionado->exp_dada = mob->exp_dada;
+
+            strcpy(seleccionado->item.armas.nombre, mob->item.armas.nombre);
+            seleccionado->item.armas.durabilidad = mob->item.armas.durabilidad;
+            seleccionado->item.armas.ataque = mob->item.armas.ataque;
+
+            copiaArmadura(&seleccionado->item.casco, &mob->item.casco);
+            copiaArmadura(&seleccionado->item.pechera, &mob->item.pechera);
+            copiaArmadura(&seleccionado->item.guantes, &mob->item.guantes);
+            copiaArmadura(&seleccionado->item.pantalones, &mob->item.pantalones);
+            copiaArmadura(&seleccionado->item.botas, &mob->item.botas);
+
+            seleccionado->item.pocion = list_create();
+            if (mob->item.pocion != NULL) {
+                for (Pocion * p = list_first(mob->item.pocion); p != NULL; p = list_next(mob->item.pocion)){
+                    Pocion * nueva = malloc(sizeof(Pocion));
+                    *nueva = *p;
+                    list_pushBack(seleccionado->item.pocion, nueva);
+                }
+            }
+
+            return seleccionado;
+        }
+        i++;
+    }
+    return NULL;
+}
+
+/**********************************************/
+/*              Crear al jugador              */
+/**********************************************/
+
+Jugador * createPlayer(char nombre[], HashMap * juego){
+    Jugador * player = (Jugador *)malloc(sizeof(Jugador));
+    if (player == NULL) exit(1);
+
+    strcpy(player->nombre, nombre);
+    Pair * inicio = firstMap(juego);
+    if (inicio == NULL) {
+        printf("Error: No hay escenarios cargados en el juego.\n");
+        free(player);
+        return NULL;
+    }
+    player->vida = 100;
+    player->max_vida = 100;
+    player->vida_total = 0;
+    player->estamina = 15;
+    player->max_estamina = 15;
+    player->estamina_total = 0;
+    player->defensa = 10;
+    player->max_defensa = 100;
+    player->defensa_total = 0;
+    player->ataque = 4;
+    player->ataque_total = 4;
+    player->experiencia = 0;
+    player->nivel = 0;
+    player->actual = inicio->value;
+    
+    strcpy(player->inventario.armas.nombre, "Sin arma");
+    player->inventario.armas.ataque = 0;
+    player->inventario.armas.durabilidad = 0;
+
+    Armadura vacia;
+    strcpy(vacia.nombre, "Sin armadura");
+    strcpy(vacia.tipo, "");
+    vacia.defensa = 0;
+    vacia.durabilidad = 0;
+    strcpy(vacia.bufo, "");
+    vacia.valor = 0;
+
+    player->inventario.casco = vacia;
+    player->inventario.pechera = vacia;
+    player->inventario.guantes = vacia;
+    player->inventario.pantalones = vacia;
+    player->inventario.botas = vacia;
+
+    player->inventario.pocion = list_create();
+
+    player->inmunidad = false;
+
+    return player;
+}
+
+/**********************************************/
+/*                   Mostrar                  */
+/**********************************************/
+
+void mostrar_mobs(HashMap *mobs) {
+    Pair *pp = firstMap(mobs);
+    if (!pp) {
+        printf("No hay monstruos cargados.\n");
+        return;
+    }
+
+    printf("=== Lista de Monstruos ===\n");
+    for (; pp; pp = nextMap(mobs)) {
+        Enemigo *e = (Enemigo*)pp->value;
+
+        // Estadísticas básicas
+        printf("Nombre: %s | Dif: %s | Vida: %d | Atk: %d | Def: %d | Exp: %d\n",
+            e->nombre, e->dificultad, e->vida,
+            e->ataque, e->defensa, e->exp_dada
+        );
+
+        // Arma
+        Arma *a = &e->item.armas;
+        printf("  • Arma:    %s (Atk %d, Dur %d)\n",
+            a->nombre, a->ataque, a->durabilidad
+        );
+
+        // Armaduras
+        Armadura *c = &e->item.casco;
+        printf("  • Casco:   %s %s (Def %d, Dur %d, Val %d)\n",
+            c->tipo, c->nombre, c->defensa, c->durabilidad, c->valor
+        );
+        Armadura *g = &e->item.guantes;
+        printf("  • Guantes: %s %s (Def %d, Dur %d, Val %d)\n",
+            g->tipo, g->nombre, g->defensa, g->durabilidad, g->valor
+        );
+        Armadura *p = &e->item.pechera;
+        printf("  • Pechera: %s %s (Def %d, Dur %d, Val %d)\n",
+            p->tipo, p->nombre, p->defensa, p->durabilidad, p->valor
+        );
+        Armadura *pa= &e->item.pantalones;
+        printf("  • Pantalones: %s %s (Def %d, Dur %d, Val %d)\n",
+            pa->tipo, pa->nombre, pa->defensa, pa->durabilidad, pa->valor
+        );
+        Armadura *b = &e->item.botas;
+        printf("  • Botas:   %s %s (Def %d, Dur %d, Val %d)\n",
+            b->tipo, b->nombre, b->defensa, b->durabilidad, b->valor
+        );
+
+        // Poción(es)
+        if (list_size(e->item.pocion) > 0) {
+            printf("  • Pociones:\n");
+            for (Pocion *ppoc = list_first(e->item.pocion);
+                 ppoc;
+                 ppoc = list_next(e->item.pocion))
+            {
+                printf("      - %s (%s, Val %d)\n",
+                    ppoc->nombre, ppoc->efecto, ppoc->valor
+                );
+            }
+        }
+        putchar('\n');
+    }
+}
+
+void mostrarMap(HashMap * juego){
+    for (Pair *pp = firstMap(juego); pp; pp = nextMap(juego)) {
+        Escenarios *e = (Escenarios*)pp->value;
+        printf("ID: %s, Nombre: %s, Leyenda: %s, Dificultad: %s\n", e->id, e->nombre, e->leyenda, e->dificultad);
+        printf("Arriba: %s, Abajo: %s, Izquierda: %s, Derecha: %s\n", e->id_arriba, e->id_abajo, e->id_izquierda, e->id_derecha);
+    }
+}
+
+/**********************************************/
+/*               Ciclo de Pelea               */
+/**********************************************/
 
 void guardar_item(Inventario * inv, void * item, int tipo){
     if (!item) return;
@@ -407,461 +870,6 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
     }
 }
 
-/**********************************************/
-/*            Mostrar creditos                */
-/**********************************************/
-
-void mostrarCreditos()
-{
-    limpiarPantalla();
-    const char* creditos[] = {
-        "Falta Creatividad Studios Presenta:",
-        "Falta XP",
-        "",
-        "Director: Eduardo Sandoval",
-        "Productor: Joaquin Contreras",
-        "Creacion de Enemigos: Brandon Caceres",
-        "Interface Designer: Josue Huaiquil", "",
-        "Equipo de Programacion:",
-        "Eduardo Sandoval",
-        "Joaquin Contreras",
-        "Brandon Caceres",
-        "Josue Huaiquil", "",
-        "Gracias por jugar Falta XP!"
-    };
-
-    int cantidad = sizeof(creditos) / sizeof(creditos[0]);
-
-    for (int i = 0; i < cantidad; i++) {
-        printf("%s\n", creditos[i]);
-        esperar(1);         // Espera 1 segundos
-    }
-}
-
-/**********************************************/
-/*               Mostrar menus                */
-/**********************************************/
-
-void mostrarMenuAyuda() {
-    limpiarPantalla();
-    puts("========================================");
-    puts("              MENU DE AYUDA                  ");
-    puts("========================================");
-  
-    puts("1) SOBRE LOS MOVIMIENTOS");
-    puts("2) SOBRE LOS ENEMIGOS");
-    puts("3) SOBRE EL EQUIPAMENTO");
-    puts("4) VOLVER AL MENU PRINCIPAL");
-}
-
-void mostrarMenuPrincipal() {
-    limpiarPantalla();
-    puts("========================================");
-    puts("               FALTA XP                ");
-    puts("========================================");
-  
-    puts("1) INICIAR NUEVA PARTIDA");
-    puts("2) AYUDA");
-    puts("3) CREDITOS");
-    puts("4) SALIR");
-}
-
-void mostrarMenuJuego(){
-    limpiarPantalla();
-    puts("========================================");
-    puts("               FALTA XP                ");
-    puts("========================================");
-  
-    puts("1) EXPLORAR ZONAS"); //explorar-zona
-    puts("2) VER INVENTARIO"); //explorar-zona
-    puts("3) RECOLECTAR ITEMS"); //gention-items
-    puts("4) ATACAR A UN ENEMIGO"); //atacar-enemigo
-    // POSIBLE guardar partida
-    puts("5) SALIR AL MENU PRINCIPAL");
-}
-
-void menuOpcionesPelea()
-{
-    puts("========================================");
-    puts("              MENU DE PELEA                   ");
-    puts("========================================");
-    puts("1) ATACAR AL ENEMIGO");
-    puts("2) USAR POCION");
-    puts("3) HUIR DE LA PELEA");
-    puts("=========================================");
-}
-
-/**********************************************/
-/*                  Leer CSVs                 */
-/**********************************************/
-
-void leer_escenarios(HashMap * juego){
-    FILE *archivo = fopen("data/mapa.csv", "r");
-    if (archivo == NULL){
-        perror("Error al abrir el archivo");
-        return;
-    }
-
-    char **campos;
-    campos = leer_linea_csv(archivo, ',');
-
-    while ((campos = leer_linea_csv(archivo, ',')) != NULL){
-        Escenarios * escenario = (Escenarios*)malloc(sizeof(Escenarios));
-        //Inicializa los punteros de direccion a NULL para evitar punteros basura
-        escenario->arriba = NULL;
-        escenario->abajo = NULL;
-        escenario->izquierda = NULL;
-        escenario->derecha = NULL;
-        
-        //Copia los datos del CSV a la estructura del escenario
-        strncpy(escenario->id, campos[0], sizeof(escenario->id));
-        strncpy(escenario->nombre, campos[1], sizeof(escenario->nombre));
-        strncpy(escenario->leyenda, campos[2], sizeof(escenario->leyenda));
-
-        strcpy(escenario->id_izquierda, campos[3]);
-        strcpy(escenario->id_derecha, campos[4]);
-        strcpy(escenario->id_arriba, campos[5]);
-        strcpy(escenario->id_abajo, campos[6]);
-
-        strncpy(escenario->dificultad, campos[7], sizeof(escenario->dificultad));
-
-        insertMap(juego, escenario->id, escenario);
-
-    }
-    fclose(archivo);
-
-    // Segunda pasada: establecer los punteros de dirección entre escenarios
-    List * claves = list_create();
-    Pair * par = firstMap(juego);
-    while (par != NULL) {
-        list_pushBack(claves, par->key);
-        par = nextMap(juego);
-    }
-
-    // Ahora recorremos esa lista para validar enlaces sin afectar el iterador de juego
-    for (char * clave = list_first(claves); clave != NULL; clave = list_next(claves)) {
-        Pair * pEscenario = searchMap(juego, clave);
-        if (!pEscenario) continue;
-
-        Escenarios * escenario = (Escenarios*)pEscenario->value;
-
-        if (strcmp(escenario->id_izquierda, "-1") != 0){
-            Pair * aux = searchMap(juego, escenario->id_izquierda);
-            if (aux != NULL) escenario->izquierda = (Escenarios*)aux->value;
-        }
-        if (strcmp(escenario->id_derecha, "-1") != 0){
-            Pair * aux = searchMap(juego, escenario->id_derecha);
-            if (aux != NULL) escenario->derecha = (Escenarios*)aux->value;
-        }
-        if (strcmp(escenario->id_arriba, "-1") != 0){
-            Pair * aux = searchMap(juego, escenario->id_arriba);
-            if (aux != NULL) escenario->arriba = (Escenarios*)aux->value;
-        }
-        if (strcmp(escenario->id_abajo, "-1") != 0){
-            Pair * aux = searchMap(juego, escenario->id_abajo);
-            if (aux != NULL) escenario->abajo = (Escenarios*)aux->value;
-        }
-    }
-
-    list_clean(claves);
-    free(claves);
-}
-
-void leer_mobs(HashMap *mobs) {
-    FILE *archivo = fopen("data/enemigos.csv", "r");
-    if (!archivo) {
-        perror("Error al abrir data/enemigos.csv");
-        return;
-    }
-
-    // 1) Saltar cabecera
-    char **campos = leer_linea_csv(archivo, ',');
-    (void)campos;  // ignoramos el resultado
-
-    // 2) Leer cada línea
-    while ((campos = leer_linea_csv(archivo, ',')) != NULL) {
-        Enemigo *e = malloc(sizeof(Enemigo));
-        if (!e) { perror("malloc"); break; }
-
-        // Rellenar campos básicos
-        strncpy(e->nombre,     campos[0], sizeof(e->nombre)-1);
-        strncpy(e->dificultad, campos[1], sizeof(e->dificultad)-1);
-        e->vida = atoi(campos[2]);
-        e->ataque = atoi(campos[3]);
-        e->defensa = atoi(campos[4]);
-        e->exp_dada = atoi(campos[5]);
-
-        // Inicializar inventario
-        // ----------------------------------------------------------------
-        //  Arma
-        char *tmp = strdup(campos[6]);
-        char *tok = strtok(tmp, ",");
-        strncpy(e->item.armas.nombre, tok, sizeof(e->item.armas.nombre)-1);
-        tok = strtok(NULL, ","); e->item.armas.ataque     = atoi(tok);
-        tok = strtok(NULL, ","); e->item.armas.durabilidad = atoi(tok);
-        free(tmp);
-
-        //  Armaduras (casco, guantes, pechera, pantalones, botas)
-        const int idx[5] = {7,8,9,10,11};
-        Armadura *pieces[5] = {
-            &e->item.casco,
-            &e->item.guantes,
-            &e->item.pechera,
-            &e->item.pantalones,
-            &e->item.botas
-        };
-        for (int i = 0; i < 5; i++) {
-            char *tmp = strdup(campos[idx[i]]);
-            char *tok = strtok(tmp, ",");
-
-            // separar tipo y nombre
-            char *sp = strchr(tok, ' ');
-            if (sp) {
-                *sp = '\0';
-                strncpy(pieces[i]->tipo,   tok,       sizeof(pieces[i]->tipo)-1);
-                strncpy(pieces[i]->nombre, sp+1,     sizeof(pieces[i]->nombre)-1);
-            } else {
-                strncpy(pieces[i]->tipo, tok,        sizeof(pieces[i]->tipo)-1);
-            }
-
-            // leer el resto de campos
-            tok = strtok(NULL, ","); pieces[i]->defensa    = atoi(tok);
-            tok = strtok(NULL, ","); pieces[i]->durabilidad = atoi(tok);
-            tok = strtok(NULL, ",");
-            tok = strtok(NULL, ","); pieces[i]->valor      = atoi(tok);
-
-            free(tmp);
-        }
-
-        //  Poción
-        e->item.pocion = list_create();
-        {
-            char *tmp = strdup(campos[12]);
-            char *tok = strtok(tmp, ",");
-            Pocion *p = malloc(sizeof(Pocion));
-            strncpy(p->nombre, tok, sizeof(p->nombre)-1);
-
-            tok = strtok(NULL, ",");
-            strncpy(p->efecto, tok, sizeof(p->efecto)-1);
-
-            tok = strtok(NULL, ",");
-            p->valor = atoi(tok);
-
-            list_pushBack(e->item.pocion, p);
-            free(tmp);
-        }
-        // ----------------------------------------------------------------
-
-        // Insertar en el HashMap
-        insertMap(mobs, e->nombre, e);
-    }
-
-    fclose(archivo);
-}
-
-/**********************************************/
-/*          Asignar mobs a escenarios         */
-/**********************************************/
-
-void asignar_mobs(HashMap * escenarios, HashMap * mobs){
-    for (Pair * esc = firstMap(escenarios); esc != NULL; esc = nextMap(escenarios)){
-        Escenarios * escenario = esc->value;
-
-        escenario->Enemigos = list_create();
-
-        for (Pair * par_mob = firstMap(mobs); par_mob != NULL; par_mob = nextMap(mobs)){
-            Enemigo * mob = par_mob->value;
-
-            if (strcmp(mob->dificultad, escenario->dificultad) == 0){
-                list_pushBack(escenario->Enemigos, mob);
-            }
-        }
-    }
-}
-
-Enemigo * seleccionarEnemigo(List * enemigos){
-    if(enemigos == NULL){
-        return NULL;
-    }
-
-    int num_enemigos = 0;
-    for (Enemigo *mob = list_first(enemigos); mob != NULL; mob = list_next(enemigos)){
-        num_enemigos++;
-    }
-    if (num_enemigos == 0) {
-        return NULL; // No enemies to select, so return NULL
-    }
-    int index = rand() % num_enemigos;
-
-    int i = 0;
-    for (Enemigo *mob = list_first(enemigos); mob != NULL; mob = list_next(enemigos)){
-        if (i == index){
-            Enemigo * seleccionado = malloc(sizeof(Enemigo));
-            strcpy(seleccionado->nombre, mob->nombre);
-            strcpy(seleccionado->dificultad, mob->dificultad);
-
-            seleccionado->vida = mob->vida;
-            seleccionado->defensa = mob->defensa;
-            seleccionado->ataque = mob->ataque;
-            seleccionado->exp_dada = mob->exp_dada;
-
-            Inventario * loot = malloc(sizeof(Inventario));
-
-            seleccionado->item.armas = mob->item.armas;
-            seleccionado->item.casco = mob->item.casco;
-            seleccionado->item.guantes = mob->item.guantes;
-            seleccionado->item.pechera = mob->item.pechera;
-            seleccionado->item.pantalones = mob->item.pantalones;
-            seleccionado->item.botas = mob->item.botas;
-
-            seleccionado->item.pocion = list_create();
-            if (mob->item.pocion != NULL) {
-                for (Pocion * p = list_first(mob->item.pocion); p != NULL; p = list_next(mob->item.pocion)){
-                    Pocion * nueva = malloc(sizeof(Pocion));
-                    *nueva = *p;
-                    list_pushBack(seleccionado->item.pocion, nueva);
-                }
-            }
-
-            return seleccionado;
-        }
-        i++;
-    }
-    return NULL;
-}
-
-/**********************************************/
-/*              Crear al jugador              */
-/**********************************************/
-
-Jugador * createPlayer(char nombre[], HashMap * juego){
-    Jugador * player = (Jugador *)malloc(sizeof(Jugador));
-    if (player == NULL) exit(1);
-
-    strcpy(player->nombre, nombre);
-    Pair * inicio = firstMap(juego);
-    if (inicio == NULL) {
-        printf("Error: No hay escenarios cargados en el juego.\n");
-        free(player);
-        return NULL;
-    }
-    player->vida = 100;
-    player->max_vida = 100;
-    player->vida_total = 0;
-    player->estamina = 15;
-    player->max_estamina = 15;
-    player->estamina_total = 0;
-    player->defensa = 10;
-    player->max_defensa = 100;
-    player->defensa_total = 0;
-    player->ataque = 4;
-    player->ataque_total = 4;
-    player->experiencia = 0;
-    player->nivel = 0;
-    player->actual = inicio->value;
-    
-    strcpy(player->inventario.armas.nombre, "Sin arma");
-    player->inventario.armas.ataque = 0;
-    player->inventario.armas.durabilidad = 0;
-
-    Armadura vacia;
-    strcpy(vacia.nombre, "Sin armadura");
-    strcpy(vacia.tipo, "");
-    vacia.defensa = 0;
-    vacia.durabilidad = 0;
-    strcpy(vacia.bufo, "");
-    vacia.valor = 0;
-
-    player->inventario.casco = vacia;
-    player->inventario.pechera = vacia;
-    player->inventario.guantes = vacia;
-    player->inventario.pantalones = vacia;
-    player->inventario.botas = vacia;
-
-    player->inventario.pocion = list_create();
-
-    player->inmunidad = false;
-
-    return player;
-}
-
-/**********************************************/
-/*                   Mostrar                  */
-/**********************************************/
-
-void mostrar_mobs(HashMap *mobs) {
-    Pair *pp = firstMap(mobs);
-    if (!pp) {
-        printf("No hay monstruos cargados.\n");
-        return;
-    }
-
-    printf("=== Lista de Monstruos ===\n");
-    for (; pp; pp = nextMap(mobs)) {
-        Enemigo *e = (Enemigo*)pp->value;
-
-        // Estadísticas básicas
-        printf("Nombre: %s | Dif: %s | Vida: %d | Atk: %d | Def: %d | Exp: %d\n",
-            e->nombre, e->dificultad, e->vida,
-            e->ataque, e->defensa, e->exp_dada
-        );
-
-        // Arma
-        Arma *a = &e->item.armas;
-        printf("  • Arma:    %s (Atk %d, Dur %d)\n",
-            a->nombre, a->ataque, a->durabilidad
-        );
-
-        // Armaduras
-        Armadura *c = &e->item.casco;
-        printf("  • Casco:   %s %s (Def %d, Dur %d, Val %d)\n",
-            c->tipo, c->nombre, c->defensa, c->durabilidad, c->valor
-        );
-        Armadura *g = &e->item.guantes;
-        printf("  • Guantes: %s %s (Def %d, Dur %d, Val %d)\n",
-            g->tipo, g->nombre, g->defensa, g->durabilidad, g->valor
-        );
-        Armadura *p = &e->item.pechera;
-        printf("  • Pechera: %s %s (Def %d, Dur %d, Val %d)\n",
-            p->tipo, p->nombre, p->defensa, p->durabilidad, p->valor
-        );
-        Armadura *pa= &e->item.pantalones;
-        printf("  • Pantalones: %s %s (Def %d, Dur %d, Val %d)\n",
-            pa->tipo, pa->nombre, pa->defensa, pa->durabilidad, pa->valor
-        );
-        Armadura *b = &e->item.botas;
-        printf("  • Botas:   %s %s (Def %d, Dur %d, Val %d)\n",
-            b->tipo, b->nombre, b->defensa, b->durabilidad, b->valor
-        );
-
-        // Poción(es)
-        if (list_size(e->item.pocion) > 0) {
-            printf("  • Pociones:\n");
-            for (Pocion *ppoc = list_first(e->item.pocion);
-                 ppoc;
-                 ppoc = list_next(e->item.pocion))
-            {
-                printf("      - %s (%s, Val %d)\n",
-                    ppoc->nombre, ppoc->efecto, ppoc->valor
-                );
-            }
-        }
-        putchar('\n');
-    }
-}
-
-void mostrarMap(HashMap * juego){
-    for (Pair *pp = firstMap(juego); pp; pp = nextMap(juego)) {
-        Escenarios *e = (Escenarios*)pp->value;
-        printf("ID: %s, Nombre: %s, Leyenda: %s, Dificultad: %s\n", e->id, e->nombre, e->leyenda, e->dificultad);
-        printf("Arriba: %s, Abajo: %s, Izquierda: %s, Derecha: %s\n", e->id_arriba, e->id_abajo, e->id_izquierda, e->id_derecha);
-    }
-}
-
-/**********************************************/
-/*               Ciclo de Pelea               */
-/**********************************************/
-
 bool usarPociones(Jugador * player){
     limpiarPantalla();
     if (list_size(player->inventario.pocion) == 0){
@@ -907,7 +915,7 @@ bool usarPociones(Jugador * player){
         printf("Tu vida actual es: %d", player->vida);
     }
     else if (strcmp(seleccionada->efecto, "Inmunidad") == 0){
-        player->inmunidad = true;
+        player->inmunidad = seleccionada->valor;
         puts("¡Ahora eres inmune temporalmente!");
     }
     else if (strcmp(seleccionada->efecto, "Escudo") == 0){
@@ -1015,6 +1023,12 @@ void perdidaDurabilidad(Armadura * aux){
 }
 
 void ataqueEnemigo(Jugador * player, Enemigo * enemigo){
+    
+    if(player->inmunidad) {
+        puts("¡El enemigo no puede dañarte, estás inmune!");
+        (player->inmunidad)--; // Desactiva la inmunidad después de un ataque
+        return;
+    }
 
     int dano = (int)((enemigo->ataque * enemigo->ataque) / (enemigo->ataque + player->defensa_total));
     player->vida -= dano;
@@ -1127,12 +1141,9 @@ void seleccionOpcion(Jugador * player)
                 //verEstado(); //FUNCIÓN PARA VER EL INVENTARIO DEL JUGADOR
                 break;
             case '3':
-                //recolectarItems(); //FUNCIÓN PARA RECOLECTAR LOS ITEMS DE LA ZONA
-                break;
-            case '4':
                 jugadorVivo = cicloPelea(player, player->actual->Enemigos); // Ciclo de pelea con los enemigos de la zona actual
                 break;
-            case '5':
+            case '4':
                 //equipar_DesequiparItem(); //FUNCIÓN PARA EQUIPAR Y DESEQUIPAR ITEMS
                 return;
             default:
