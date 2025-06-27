@@ -982,19 +982,19 @@ void calcularEstatsT(Jugador * player){
         aplicarBufo(player, player->inventario.casco.bufo, player->inventario.casco.valor);
     }
     if (strcmp(player->inventario.pechera.nombre, "Sin armadura") != 0){
-        player->defensa_total += player->inventario.casco.defensa;
+        player->defensa_total += player->inventario.pechera.defensa;
         aplicarBufo(player, player->inventario.pechera.bufo, player->inventario.pechera.valor);
     }
     if (strcmp(player->inventario.guantes.nombre, "Sin armadura") != 0){
-        player->defensa_total += player->inventario.casco.defensa;
+        player->defensa_total += player->inventario.guantes.defensa;
         aplicarBufo(player, player->inventario.guantes.bufo, player->inventario.guantes.valor);
     }
     if (strcmp(player->inventario.pantalones.nombre, "Sin armadura") != 0){
-        player->defensa_total += player->inventario.casco.defensa;
+        player->defensa_total += player->inventario.pantalones.defensa;
         aplicarBufo(player, player->inventario.pantalones.bufo, player->inventario.pantalones.valor);
     }
     if (strcmp(player->inventario.botas.nombre, "Sin armadura") != 0){
-        player->defensa_total += player->inventario.casco.defensa;
+        player->defensa_total += player->inventario.botas.defensa;
         aplicarBufo(player, player->inventario.botas.bufo, player->inventario.botas.valor);
     }
 }
