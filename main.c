@@ -193,7 +193,7 @@ int main(){
             break;
         case '4':
             puts("SALIENDO DEL JUEGO");
-            liberarMemoria(g_player, g_juego, g_mobs, g_facil, g_medio, g_dificil);
+            if (g_player != NULL) liberarMemoria(g_player, g_juego, g_mobs, g_facil, g_medio, g_dificil);
             break;
         default:
             puts("OPCION NO VALIDA");
@@ -1391,6 +1391,10 @@ bool movermeDeEscenario(Jugador *jugador)
     printf("Te has movido a: %s\n\n", jugador->actual->nombre);
 }
 
+/**********************************************/
+/*        Ver estadisticas del jugador        */
+/**********************************************/
+
 void verEstado(Jugador *player)
 {
     int n = 0;
@@ -1402,11 +1406,13 @@ void verEstado(Jugador *player)
             player->nombre, player->vida, player->estamina, player->ataque_total, player->defensa_total, 
             player->nivel);
     printf("Te encuentras en: %s\n", player->actual->nombre);
-    if(strcmp(player->inventario.armas.nombre, "Sin arma") == 1) printf("[ARMA]: %s\n", player->inventario.armas.nombre);
+    presioneTeclaParaContinuar();
+    limpiarPantalla();
+    if(strcmp(player->inventario.armas.nombre, "Sin arma") == 1) printf("[ARMA]: %s\n\n", player->inventario.armas.nombre);
     if(strcmp(player->inventario.casco.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Casco %s\n", player->inventario.casco.nombre);
     if(strcmp(player->inventario.pechera.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Pechera %s\n", player->inventario.pechera.nombre);
     if(strcmp(player->inventario.guantes.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Guantes %s\n", player->inventario.guantes.nombre);
-    if(strcmp(player->inventario.pantalones.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Pantalon %s\n\n", player->inventario.pantalones.nombre);
+    if(strcmp(player->inventario.pantalones.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Pantalon %s\n", player->inventario.pantalones.nombre);
     if(strcmp(player->inventario.botas.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Botas %s\n\n", player->inventario.botas.nombre);
     if(list_first(player->inventario.pocion) != NULL)
     {
@@ -1421,6 +1427,10 @@ void verEstado(Jugador *player)
     }
     
 }
+
+/**********************************************/
+/*             Mensaje de victoria            */
+/**********************************************/
 
 void victoria()
 {
@@ -1439,14 +1449,17 @@ void victoria()
     
 }
 
+/**********************************************/
+/*              Liberar memoria               */
+/**********************************************/
+
 void liberarMemoria(Jugador *player,HashMap *juego,HashMap *mobs,List *facil,List *medio,List *dificil)
 {
-    // 1) Inventario del jugador
+    // Se libera la memoria del inventario del jugador
     list_clean(player->inventario.pocion);
     list_free(player->inventario.pocion);
     free(player);
 
-    // 2) Escenarios
     // Liberamos cada Escenarios* guardado en el map
     for (Pair *par = firstMap(juego); par != NULL; par = nextMap(juego)) {
         free(par->value);  // cada Escenarios* fue malloc()
@@ -1467,7 +1480,7 @@ void liberarMemoria(Jugador *player,HashMap *juego,HashMap *mobs,List *facil,Lis
         list_free(n->item.pocion);
         free(n);
     }
-    // 4) Listas de dificultad (compartidas entre escenarios)
+    // Se libera la memoria de las listas de dificultad (compartidas entre escenarios)
     list_free(facil);
     list_free(medio);
     list_free(dificil);
