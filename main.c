@@ -1347,16 +1347,15 @@ void verEstado(Jugador *player)
             player->nombre, player->vida, player->estamina, player->ataque_total, player->defensa_total, 
             player->nivel);
     printf("Te encuentras en: %s\n", player->actual->nombre);
-    printf("[ARMA]: %s\n", player->inventario.armas.nombre);
-    printf("[CASCO]: %s\n", player->inventario.casco.nombre);
-    printf("[PECHERA]: %s\n", player->inventario.pechera.nombre);
-    printf("[GUANTES]: %s\n", player->inventario.guantes.nombre);
-    printf("[PANTALON]: %s\n", player->inventario.pantalones.nombre);
-    printf("[POCIONES]:\n");
-    void *dato = list_first(player->inventario.pocion);
-    if (!dato) {
-        printf("No tienes pociones.\n");
-    } else {
+    if(strcmp(player->inventario.armas.nombre, "Sin arma") == 1) printf("[ARMA]: %s\n", player->inventario.armas.nombre);
+    if(strcmp(player->inventario.casco.nombre, "Sin armadura") == 1) printf("[CASCO]: %s\n", player->inventario.casco.nombre);
+    if(strcmp(player->inventario.pechera.nombre, "Sin armadura") == 1) printf("[PECHERA]: %s\n", player->inventario.pechera.nombre);
+    if(strcmp(player->inventario.guantes.nombre, "Sin armadura") == 1) printf("[GUANTES]: %s\n", player->inventario.guantes.nombre);
+    if(strcmp(player->inventario.pantalones.nombre, "Sin armadura") == 1) printf("[PANTALON]: %s\n\n", player->inventario.pantalones.nombre);
+    if(list_first(player->inventario.pocion) != NULL)
+    {
+        printf("[POCIONES]:\n");
+        void *dato = list_first(player->inventario.pocion);
         int i = 1;
         while (dato != NULL) {
             Pocion *p = (Pocion *)dato;
@@ -1364,4 +1363,5 @@ void verEstado(Jugador *player)
             dato = list_next(player->inventario.pocion);
         }
     }
+    
 }
