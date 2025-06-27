@@ -777,7 +777,7 @@ void guardar_item(Inventario * inv, void * item, int tipo){
         if (arma->ataque > 0 && arma->durabilidad > 0){
             printf("Arma actual: %s (Ataque: %d, Durabilidad: %d)\n", inv->armas.nombre, inv->armas.ataque, inv->armas.durabilidad);
             printf("Nueva arma:  %s (Ataque: %d, Durabilidad: %d)\n", arma->nombre, arma->ataque, arma->durabilidad);
-            printf("Deseas reemplazar tu arma actual? (1 = SI, 0 = NO): ");
+            printf("Deseas reemplazar tu arma actual? (1 = SI, 2 = NO): ");
             int decision;
             scanf("%d", &decision);
             while (getchar() != '\n');
@@ -805,7 +805,7 @@ void guardar_item(Inventario * inv, void * item, int tipo){
             printf("\n[%s]\n", armadura->tipo);
             printf("Armadura actual: %s %s (Defensa: %d, Durabilidad: %d)\n", actual->tipo, actual->nombre, actual->defensa, actual->durabilidad);
             printf("Nueva armadura:  %s %s (Defensa: %d, Durabilidad: %d)\n", armadura->tipo, armadura->nombre, armadura->defensa, armadura->durabilidad);
-            printf("Deseas reemplazar esta armadura? (1 = SI, 0 = NO): ");
+            printf("Deseas reemplazar esta armadura? (1 = SI, 2 = NO): ");
             int decision;
             scanf("%d", &decision);
             while (getchar() != '\n');
