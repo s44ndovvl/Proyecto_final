@@ -55,7 +55,7 @@ Este sistema ha sido desarrollado en lenguaje C y puede ejecutarse fácilmente u
 - Ataque del jugador consigue restar la vida a el enemigo y hacer los ajustes correspondientes.
 - Ataque del enemigo consigue restar vida del jugador, manejar las excepciones, como inmunidad y hacer los ajustes sobre la armadura correspondientes.
 - Uso de posiciones y sus bufos, aumentan las estadisticas como deberian.
-- reinicio de estadisticas luego de batalla. *
+- reinicio de estadisticas luego de batalla.
 - La armadura otorga correctamente defensa y su bufo asociado.
 - Si la armadura se rompe, el jugador pierde la defensa y bufos que esta proporciona de forma correcta.
 - El enemigo suelta alatoriamente objetos al jugador y le otorga una cantidad de experiencia correctamente. 
