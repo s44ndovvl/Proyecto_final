@@ -1420,7 +1420,7 @@ void liberarMemoria(Jugador *player,HashMap *juego,HashMap *mobs,List *facil,Lis
     }
     // Limpiamos y destruimos el HashMap
     cleanMap(juego); // libera internamente cada Pair
-    freeMap(juego);
+    free(juego);
 
     // 3) Monstruos (mobs)
     for (Pair *par = firstMap(mobs); par != NULL; par = nextMap(mobs)) {
@@ -1431,7 +1431,7 @@ void liberarMemoria(Jugador *player,HashMap *juego,HashMap *mobs,List *facil,Lis
         free(e);
     }
     cleanMap(mobs);
-    freeMap(mobs);
+    free(mobs);
 
     // 4) Listas de dificultad (compartidas entre escenarios)
     list_free(facil);
