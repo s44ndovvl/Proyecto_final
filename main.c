@@ -82,6 +82,7 @@ typedef struct{
     Escenarios *actual;
     Inventario inventario;
     int inmunidad;
+    bool ReydemonioDerrotado;
 }Jugador;
 
 typedef struct{
@@ -139,69 +140,67 @@ bool movermeDeEscenario(Jugador * );
 void lvlup(Jugador * );
 
 void verEstado(Jugador * );
+void victoria();
+void liberarMemoria(Jugador *,HashMap *,HashMap *,List *,List *,List *);
+
+static Jugador *g_player   = NULL;
+static HashMap *g_juego    = NULL;
+static HashMap *g_mobs     = NULL;
+static List *g_facil       = NULL;
+static List *g_medio       = NULL;
+static List *g_dificil     = NULL;
 
 /**********************************************/
 /*                    Main                    */
 /**********************************************/
 
 int main(){
-    HashMap *juego = createMap(100); // Crea un HashMap para almacenar los escenarios
-    HashMap *mobs = createMap(100); // Crea un HashMap para almacenar los monstruos
-
-    Jugador * player = NULL;
-    if (juego == NULL) {
+    g_juego   = createMap(100);
+    g_mobs    = createMap(100);
+    if (!g_juego) {
         fprintf(stderr, "Error al crear el HashMap\n");
         return 1;
     }
     srand(time(NULL));
-    leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
-    //mostrarMap(juego);
-    leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
-    //mostrar_mobs(mobs); // Muestra el contenido del HashMap
-    asignar_mobs(juego, mobs);
+
+    leer_escenarios(g_juego);
+    leer_mobs(g_mobs);
+    asignar_mobs(g_juego, g_mobs);
 
     char op;
     char name[50];
     do{
-        //Se muestra un menú principal y se selecciona una opción
         mostrarMenuPrincipal();
         printf("INGRESE SU OPCION: ");
         scanf(" %c", &op);
-
-        //Se realizan las acciones según la opción seleccionada
-        switch (op)
-        {
+        
+        switch (op) {
         case '1':
-            //Nueva partida
             printf("INDIQUE EL NOMBRE DEL NUEVO JUGADOR: ");
             scanf(" %49s", name);
             getchar();
-            player = createPlayer(name, juego);
-            if (player != NULL) {
-                seleccionOpcion(player);
-            } else {
-                puts("No se pudo crear el jugador. Revise los datos de escenarios.");
-            }
+            g_player = createPlayer(name, g_juego);
+            if (g_player) seleccionOpcion(g_player);
+            else puts("No se pudo crear el jugador. Revise los datos de escenarios.");
             break;
         case '2':
-            //Ayuda
             seleccionOpcionAyuda();
             break;
         case '3':
-            //Creditos
             mostrarCreditos();
             break;
         case '4':
-            //Salir
             puts("SALIENDO DEL JUEGO");
+            liberarMemoria(g_player, g_juego, g_mobs, g_facil, g_medio, g_dificil);
             break;
         default:
-            //Muestra de mensaje en caso de seleccionar una opción no valida
             puts("OPCION NO VALIDA");
             break;
         }
         presioneTeclaParaContinuar();
-    }while(op!= '4');
+    } while(op != '4');
+
+    return 0;
 }
 
 /**********************************************/
@@ -466,6 +465,11 @@ void leer_mobs(HashMap *mobs) {
         // Insertar en el HashMap
         
     }
+
+    g_facil = facil;
+    g_medio = media;
+    g_dificil = dificil;
+
     insertMap(mobs, "facil", facil);
     insertMap(mobs, "media", media);
     insertMap(mobs, "dificil", dificil);
@@ -1032,6 +1036,9 @@ bool ataque(Jugador * player, Enemigo * enemigo){
             printf("El %s ha explotado!!. te ha quitado 10 de vida :(\n", enemigo->nombre);
             presioneTeclaParaContinuar();
         } 
+        if (strcmp(enemigo->dificultad, "Boss") == 0) {
+        victoria();
+        }
         recoger_items_enemigo(player, enemigo);
         return false;
     }
@@ -1400,4 +1407,58 @@ void verEstado(Jugador *player)
         }
     }
     
+}
+
+void victoria()
+{
+    limpiarPantalla();
+    puts("========================================");
+    puts("               VICTORIA                 ");
+    puts("========================================");
+    puts("¡Felicidades! Has derrotado al Rey Demonio y has completado el juego.");
+    puts("Gracias por jugar a Falta Xp.");
+    puts("========================================");
+    presioneTeclaParaContinuar();
+    mostrarCreditos();
+    presioneTeclaParaContinuar();
+    liberarMemoria(g_player, g_juego, g_mobs, g_facil, g_medio, g_dificil);
+    exit(0);
+    
+}
+
+void liberarMemoria(Jugador *player,HashMap *juego,HashMap *mobs,List *facil,List *medio,List *dificil)
+{
+    // 1) Inventario del jugador
+    list_clean(player->inventario.pocion);
+    list_free(player->inventario.pocion);
+    free(player);
+
+    // 2) Escenarios
+    // Liberamos cada Escenarios* guardado en el map
+    for (Pair *par = firstMap(juego); par != NULL; par = nextMap(juego)) {
+        free(par->value);  // cada Escenarios* fue malloc()
+    }
+    // Limpiamos y destruimos el HashMap
+    cleanMap(juego); // libera internamente cada Pair
+    free(juego);
+
+    for(Enemigo *n = list_first(facil); n != NULL; n = list_next(facil)) {
+        list_free(n->item.pocion);
+        free(n);
+    }
+    for(Enemigo *n = list_first(medio); n != NULL; n = list_next(medio)) {
+        list_free(n->item.pocion);
+        free(n);
+    }
+    for(Enemigo *n = list_first(dificil); n != NULL; n = list_next(dificil)) {
+        list_free(n->item.pocion);
+        free(n);
+    }
+    // 4) Listas de dificultad (compartidas entre escenarios)
+    list_free(facil);
+    list_free(medio);
+    list_free(dificil);
+
+    cleanMap(mobs);
+    free(mobs);
 }
