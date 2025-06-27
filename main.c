@@ -553,14 +553,14 @@ Jugador * createPlayer(char nombre[], HashMap * juego){
     player->vida = 100;
     player->max_vida = 100;
     player->vida_total = 0;
-    player->estamina = 15;
-    player->max_estamina = 15;
+    player->estamina = 20;
+    player->max_estamina = 20;
     player->estamina_total = 0;
     player->defensa = 10;
     player->max_defensa = 100;
     player->defensa_total = 0;
-    player->ataque = 4;
-    player->ataque_total = 4;
+    player->ataque = 6;
+    player->ataque_total = 6;
     player->experiencia = 0;
     player->nivel = 0;
     player->actual = inicio->value;
@@ -584,6 +584,11 @@ Jugador * createPlayer(char nombre[], HashMap * juego){
     player->inventario.botas = vacia;
 
     player->inventario.pocion = list_create();
+    Pocion *p = malloc(sizeof(Pocion));
+    strcpy(p->nombre, "Pocion de Vida");
+    strcpy(p->efecto, "Vida");
+    p->valor = 20;
+    list_pushBack(player->inventario.pocion, p);
 
     player->inmunidad = false;
 
