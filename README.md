@@ -2,6 +2,7 @@
 
 # Descripción
 
+Falta XP es un rpg, con curva de crecimiento y sistema de combate por turnos. permite explorar la experiencia, a travez de ocpiones, de gestion de objetos, aumento de estadisticas, pelea con enemigos con distintos niveles de dificultad y exploracion de los escenarios conectados en el mapa. Posee descripciones y una historia lineal, junto un jefe final, el cual es nuestro objetivo derrotar para terminar. El juego maneja aspecto del genero rogue like, en el punto de que si mueres tienes que empezar una nueva partida. 
 
 
 ## Cómo compilar y ejecutar
