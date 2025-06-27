@@ -61,7 +61,7 @@ Este sistema ha sido desarrollado en lenguaje C y puede ejecutarse fácilmente u
 - El enemigo suelta alatoriamente objetos al jugador y le otorga una cantidad de experiencia correctamente. 
 - Ocurre bien la subida de estadisticas al llegar a cierta cantidad de experiencia. 
 - Se maneja bien el game over, una vez el jugador pierde.
-- Se implementa correctamente el win, cuando el jugador gana derrotando al boss final. * 
+- Se implementa correctamente el win, cuando el jugador gana derrotando al boss final. *
 
 ### Problemas conocidos:
 
@@ -81,8 +81,7 @@ Este sistema ha sido desarrollado en lenguaje C y puede ejecutarse fácilmente u
 
 ## Ejemplo de uso
 
-# Paso 1: Ayuda
-
+# Paso :
 # Paso :
 # paso intermedio:
 # Paso :
