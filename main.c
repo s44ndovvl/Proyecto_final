@@ -6,6 +6,8 @@
 #include "list.h"
 #include "extra.h"
 #include "hashmap.h"
+#define NORMAL 0
+#define ESPECIAL 1
 
 typedef struct Escenarios Escenarios;
 
@@ -16,7 +18,6 @@ typedef struct{
     int durabilidad;
     char bufo[50];
     int valor;
-    //int nivel_requerido;
 }Armadura;
 
 typedef struct{
@@ -82,7 +83,8 @@ typedef struct{
 
     Escenarios *actual;
     Inventario inventario;
-    bool inmunidad;
+    int inmunidad;
+    bool ReydemonioDerrotado;
 }Jugador;
 
 typedef struct{
@@ -94,6 +96,11 @@ typedef struct{
     int exp_dada;
     Inventario item;
 }Enemigo;
+
+typedef struct {
+    int tipo; // 0 = arma, 1 = armadura, 2 = pocion
+    void *ptr;
+} ItemAux;
 
 /**********************************************/
 /*                 Prototipado                */
@@ -118,258 +125,84 @@ bool usarPociones(Jugador * );
 void aplicarBufo(Jugador * , const char *, int );
 void calcularEstatsT(Jugador * );
 void reiniciarArma(Arma * );
-bool ataque(Jugador * , Enemigo * );
+bool realizarAtaque(Jugador * , Enemigo * , bool );
 void reiniciarArmadura(Armadura * );
 void ataqueEnemigo(Jugador * , Enemigo * );
 
 bool huida(Jugador *, Enemigo *);
-void guardar_item(Inventario * , void * );
+void guardar_item(Inventario * , void * , int );
 void recoger_items_enemigo(Jugador *, Enemigo *);
 
 bool cicloPelea(Jugador * , List * );
 
 void seleccionOpcion(Jugador * );
-//void seleccionOpcionAyuda();
+void seleccionOpcionAyuda();
 
-void movermeDeEscenario(Jugador * );
+bool movermeDeEscenario(Jugador * );
 void lvlup(Jugador * );
+
+void verEstado(Jugador * );
+void victoria();
+void liberarMemoria(Jugador *,HashMap *,HashMap *,List *,List *,List *);
+
+static Jugador *g_player   = NULL;
+static HashMap *g_juego    = NULL;
+static HashMap *g_mobs     = NULL;
+static List *g_facil       = NULL;
+static List *g_medio       = NULL;
+static List *g_dificil     = NULL;
 
 /**********************************************/
 /*                    Main                    */
 /**********************************************/
 
 int main(){
-    HashMap *juego = createMap(100); // Crea un HashMap para almacenar los escenarios
-    HashMap *mobs = createMap(100); // Crea un HashMap para almacenar los monstruos
-    Jugador * player = NULL;
-    if (juego == NULL) {
+    g_juego   = createMap(100);
+    g_mobs    = createMap(100);
+    if (!g_juego) {
         fprintf(stderr, "Error al crear el HashMap\n");
         return 1;
     }
     srand(time(NULL));
-    leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
-    //mostrarMap(juego);
-    leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
-    //mostrar_mobs(mobs); // Muestra el contenido del HashMap
-    asignar_mobs(juego, mobs);
+
+    leer_escenarios(g_juego);
+    leer_mobs(g_mobs);
+    asignar_mobs(g_juego, g_mobs);
 
     char op;
     char name[50];
     do{
-        //Se muestra un menú principal y se selecciona una opción
         mostrarMenuPrincipal();
         printf("INGRESE SU OPCION: ");
         scanf(" %c", &op);
-
-        //Se realizan las acciones según la opción seleccionada
-        switch (op)
-        {
+        
+        switch (op) {
         case '1':
-            //Nueva partida
             printf("INDIQUE EL NOMBRE DEL NUEVO JUGADOR: ");
             scanf(" %49s", name);
             getchar();
-            player = createPlayer(name, juego);
-            seleccionOpcion(player);
+            g_player = createPlayer(name, g_juego);
+            if (g_player) seleccionOpcion(g_player);
+            else puts("No se pudo crear el jugador. Revise los datos de escenarios.");
             break;
         case '2':
-            //Ayuda
-            //seleccionOpcionAyuda();
+            seleccionOpcionAyuda();
             break;
         case '3':
-            //Creditos
             mostrarCreditos();
             break;
         case '4':
-            //Salir
             puts("SALIENDO DEL JUEGO");
+            liberarMemoria(g_player, g_juego, g_mobs, g_facil, g_medio, g_dificil);
             break;
         default:
-            //Muestra de mensaje en caso de seleccionar una opción no valida
             puts("OPCION NO VALIDA");
             break;
         }
         presioneTeclaParaContinuar();
-    }while(op!= '4');
-}
+    } while(op != '4');
 
-void guardar_item(Inventario * inv, void * item){
-    if (!item) return;
-
-    // Comprobamos si es poción
-    Pocion *poc = (Pocion *)item;
-    if (strcmp(poc->efecto, "Vida") == 0 || strcmp(poc->efecto, "Inmunidad") || 
-    strcmp(poc->efecto, "Escudo") || strcmp(poc->efecto, "Estamina")){
-        list_pushBack(inv->pocion, poc);
-    }
-
-    // Comprobamos si es arma
-    Arma * arma = (Arma *)item;
-    if (arma->ataque > 0 && arma->durabilidad > 0){
-        printf("Arma actual: %s (Ataque: %d, Durabilidad: %d)\n", inv->armas.nombre, inv->armas.ataque, inv->armas.durabilidad);
-        printf("Nueva arma:  %s (Ataque: %d, Durabilidad: %d)\n", arma->nombre, arma->ataque, arma->durabilidad);
-        printf("¿Deseas reemplazar tu arma actual? (1 = Sí, 0 = No): ");
-        int decision;
-        scanf("%d", &decision);
-        if (decision == 1) {
-            inv->armas = *arma;
-            printf("Has reemplazado tu arma con éxito.\n");
-        } else {
-            printf("No se reemplazó el arma.\n");
-        }
-        return;
-    }
-
-    //Comprobamos si es armadura
-    Armadura * armadura = (Armadura *)item;
-    Armadura * actual = NULL;
-    if(strcmp(armadura->tipo, "Casco") == 0) actual = &inv->casco;
-    else if (strcmp(armadura->tipo, "Pechera") == 0) actual = &inv->pechera;
-    else if (strcmp(armadura->tipo, "Guantes") == 0) actual = &inv->guantes;
-    else if (strcmp(armadura->tipo, "Pantalones") == 0) actual = &inv->pantalones;
-    else if (strcmp(armadura->tipo, "Botas") == 0) actual = &inv->botas;
-
-    if (actual) {
-        printf("\n[%s]\n", armadura->tipo);
-        printf("Armadura actual: %s (Defensa: %d, Durabilidad: %d)\n", actual->nombre, actual->defensa, actual->durabilidad);
-        printf("Nueva armadura:  %s (Defensa: %d, Durabilidad: %d)\n", armadura->nombre, armadura->defensa, armadura->durabilidad);
-        printf("¿Deseas reemplazar esta armadura? (1 = Sí, 0 = No): ");
-        int decision;
-        scanf("%d", &decision);
-        if (decision == 1) {
-            *actual = *armadura;
-            printf("Has reemplazado la armadura con éxito.\n");
-        } else {
-            printf("No se reemplazó la armadura.\n");
-        }
-    }
-}
-
-void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
-    limpiarPantalla();
-
-    Inventario *loot = &enemigo->item;
-
-    // Crear lista con los 7 ítems fijos
-    void *items_fijos[7];
-    int total_fijos = 0;
-
-    // Copiar arma
-    Arma *arma = malloc(sizeof(Arma));
-    *arma = loot->armas;
-    items_fijos[total_fijos++] = arma;
-
-    // Copiar armaduras
-    Armadura *casco = malloc(sizeof(Armadura)); 
-    *casco = loot->casco; items_fijos[total_fijos++] = casco;
-    Armadura *guantes = malloc(sizeof(Armadura)); 
-    *guantes = loot->guantes; items_fijos[total_fijos++] = guantes;
-    Armadura *pechera = malloc(sizeof(Armadura)); 
-    *pechera = loot->pechera; items_fijos[total_fijos++] = pechera;
-    Armadura *pantalones = malloc(sizeof(Armadura)); 
-    *pantalones = loot->pantalones; items_fijos[total_fijos++] = pantalones;
-    Armadura *botas = malloc(sizeof(Armadura)); 
-    *botas = loot->botas; items_fijos[total_fijos++] = botas;
-
-    // Copiar poción (si existe)
-    Pocion *p = list_first(loot->pocion);
-    if (p) {
-        Pocion *pocion = malloc(sizeof(Pocion));
-        *pocion = *p;
-        items_fijos[total_fijos++] = pocion;
-    }
-
-    // Mezclar los ítems
-    srand(time(NULL));
-    for (int i = total_fijos - 1; i > 0; i--) {
-        int j = rand() % (i + 1);
-        void *tmp = items_fijos[i];
-        items_fijos[i] = items_fijos[j];
-        items_fijos[j] = tmp;
-    }
-
-    // Elegir cuántos mostrar (entre 1 y 7)
-    int cantidad_a_mostrar = (rand() % total_fijos) + 1;
-
-    List *items_posibles = list_create();
-    for (int i = 0; i < cantidad_a_mostrar; i++) {
-        list_pushBack(items_posibles, items_fijos[i]);
-    }
-
-    while (1) {
-        limpiarPantalla();
-        puts("=== OBJETOS DEL ENEMIGO ===");
-
-        int index = 1;
-        void *objeto = list_first(items_posibles);
-        List *temp = list_create();
-
-        while (objeto != NULL) {
-            list_pushBack(temp, objeto);
-
-            // Mostrar con tipo según posición
-            if (index == 1) {
-                Arma *a = objeto;
-                printf("%d) [ARMA] %s - Ataque: %d - Durabilidad: %d\n", index, a->nombre, a->ataque, a->durabilidad);
-            } else if (index >= 2 && index <= 6) {
-                Armadura *arm = objeto;
-                printf("%d) [ARMADURA] %s - Defensa: %d - Durabilidad: %d\n", index, arm->nombre, arm->defensa, arm->durabilidad);
-            } else {
-                Pocion *poc = objeto;
-                printf("%d) [POCIÓN] %s - %s (%d)\n", index, poc->nombre, poc->efecto, poc->valor);
-            }
-
-            index++;
-            objeto = list_next(items_posibles);
-        }
-
-        printf("%d) TOMAR TODO\n", index);
-        printf("%d) CANCELAR\n", index + 1);
-        printf("\nSELECCIONE UNA OPCIÓN: ");
-        
-        int opcion;
-        scanf("%d", &opcion);
-
-        if (opcion == index + 1 || opcion <= 0) {
-            puts("CANCELANDO O OPCIÓN INVÁLIDA");
-            presioneTeclaParaContinuar();
-            break;
-        }
-
-        if (opcion == index) {
-            for (void *elemento = list_first(items_posibles); elemento != NULL; elemento = list_next(items_posibles)) {
-                guardar_item(&player->inventario, elemento);
-            }
-            puts("HAS RECOGIDO TODOS LOS OBJETOS");
-            presioneTeclaParaContinuar();
-            break;
-        } else {
-            int actual = 1;
-            void *item = list_first(temp);
-            while (item != NULL && actual < opcion) {
-                item = list_next(temp);
-                actual++;
-            }
-
-            if (item != NULL) {
-                guardar_item(&player->inventario, item);
-
-                // reconstruir lista sin el ítem tomado
-                List *nueva = list_create();
-                for (void *it = list_first(items_posibles); it != NULL; it = list_next(items_posibles)) {
-                    if (it != item) list_pushBack(nueva, it);
-                }
-
-                list_clean(items_posibles);
-                for (void *it = list_first(nueva); it != NULL; it = list_next(nueva)) {
-                    list_pushBack(items_posibles, it);
-                }
-
-                puts("Objeto recogido con éxito.");
-                presioneTeclaParaContinuar();
-            }
-        }
-    }
+    return 0;
 }
 
 /**********************************************/
@@ -385,6 +218,9 @@ void mostrarCreditos()
         "",
         "Director: Eduardo Sandoval",
         "Productor: Joaquin Contreras",
+        "Gestor de Calidad: Brandon Caceres",
+        "Responsable de Integracion: Josue Huaiquil",
+        "Coordinador: Eduardo Sandoval"
         "Creacion de Enemigos: Brandon Caceres",
         "Interface Designer: Josue Huaiquil", "",
         "Equipo de Programacion:",
@@ -438,11 +274,10 @@ void mostrarMenuJuego(){
     puts("========================================");
   
     puts("1) EXPLORAR ZONAS"); //explorar-zona
-    puts("2) VER INVENTARIO"); //explorar-zona
-    puts("3) RECOLECTAR ITEMS"); //gention-items
-    puts("4) ATACAR A UN ENEMIGO"); //atacar-enemigo
+    puts("2) VER ESTADO DEL JUGADOR"); //explorar-zona
+    puts("3) ATACAR A UN ENEMIGO"); //atacar-enemigo
     // POSIBLE guardar partida
-    puts("5) SALIR AL MENU PRINCIPAL");
+    puts("4) SALIR AL MENU PRINCIPAL");
 }
 
 void menuOpcionesPelea()
@@ -451,8 +286,9 @@ void menuOpcionesPelea()
     puts("              MENU DE PELEA                   ");
     puts("========================================");
     puts("1) ATACAR AL ENEMIGO");
-    puts("2) USAR POCION");
-    puts("3) HUIR DE LA PELEA");
+    puts("2) ATAQUE ESPECIAL");
+    puts("3) USAR POCION");
+    puts("4) HUIR DE LA PELEA");
     puts("=========================================");
 }
 
@@ -461,7 +297,7 @@ void menuOpcionesPelea()
 /**********************************************/
 
 void leer_escenarios(HashMap * juego){
-    FILE *archivo = fopen("data/Mapa1.csv", "r");
+    FILE *archivo = fopen("data/mapa.csv", "r");
     if (archivo == NULL){
         perror("Error al abrir el archivo");
         return;
@@ -477,6 +313,8 @@ void leer_escenarios(HashMap * juego){
         escenario->abajo = NULL;
         escenario->izquierda = NULL;
         escenario->derecha = NULL;
+
+
         
         //Copia los datos del CSV a la estructura del escenario
         strncpy(escenario->id, campos[0], sizeof(escenario->id));
@@ -533,6 +371,12 @@ void leer_escenarios(HashMap * juego){
 }
 
 void leer_mobs(HashMap *mobs) {
+
+    List * facil = list_create();
+    List * media = list_create();
+    List * dificil = list_create();
+
+
     FILE *archivo = fopen("data/enemigos.csv", "r");
     if (!archivo) {
         perror("Error al abrir data/enemigos.csv");
@@ -617,9 +461,21 @@ void leer_mobs(HashMap *mobs) {
         }
         // ----------------------------------------------------------------
 
+        if (strcmp(e->dificultad, "Facil") == 0) list_pushBack(facil, e);
+        if (strcmp(e->dificultad, "Media") == 0) list_pushBack(media, e);
+        if (strcmp(e->dificultad, "Dificil") == 0) list_pushBack(dificil, e);
+        if (strcmp(e->dificultad, "Boss") == 0) insertMap(mobs, "Boss", e);
         // Insertar en el HashMap
-        insertMap(mobs, e->nombre, e);
+        
     }
+
+    g_facil = facil;
+    g_medio = media;
+    g_dificil = dificil;
+
+    insertMap(mobs, "facil", facil);
+    insertMap(mobs, "media", media);
+    insertMap(mobs, "dificil", dificil);
 
     fclose(archivo);
 }
@@ -634,14 +490,20 @@ void asignar_mobs(HashMap * escenarios, HashMap * mobs){
 
         escenario->Enemigos = list_create();
 
-        for (Pair * par_mob = firstMap(mobs); par_mob != NULL; par_mob = nextMap(mobs)){
-            Enemigo * mob = par_mob->value;
-
-            if (strcmp(mob->dificultad, escenario->dificultad) == 0){
-                list_pushBack(escenario->Enemigos, mob);
-            }
-        }
+        if (strcmp(escenario->dificultad, "Facil") == 0) escenario->Enemigos = searchMap(mobs, "facil")->value;
+        if (strcmp(escenario->dificultad, "Media") == 0) escenario->Enemigos = searchMap(mobs, "media")->value;
+        if (strcmp(escenario->dificultad, "Dificil") == 0) escenario->Enemigos = searchMap(mobs, "dificil")->value;
+        if (strcmp(escenario->dificultad, "Boss") == 0) escenario->Enemigos = searchMap(mobs, "Boss")->value;
     }
+}
+
+void copiaArmadura(Armadura * seleccionado, Armadura * item){
+    strcpy(seleccionado->tipo, item->tipo);
+    strcpy(seleccionado->nombre, item->nombre);
+    seleccionado->defensa = item->defensa;
+    seleccionado->durabilidad = item->durabilidad;
+    strcpy(seleccionado->bufo, item->bufo);
+    seleccionado->valor = item->valor;
 }
 
 Enemigo * seleccionarEnemigo(List * enemigos){
@@ -653,9 +515,8 @@ Enemigo * seleccionarEnemigo(List * enemigos){
     for (Enemigo *mob = list_first(enemigos); mob != NULL; mob = list_next(enemigos)){
         num_enemigos++;
     }
-    if (num_enemigos == 0) {
-        return NULL; // No enemies to select, so return NULL
-    }
+    if (num_enemigos == 0) return NULL; // No enemies to select, so return NULL
+
     int index = rand() % num_enemigos;
 
     int i = 0;
@@ -670,20 +531,23 @@ Enemigo * seleccionarEnemigo(List * enemigos){
             seleccionado->ataque = mob->ataque;
             seleccionado->exp_dada = mob->exp_dada;
 
-            Inventario * loot = malloc(sizeof(Inventario));
+            strcpy(seleccionado->item.armas.nombre, mob->item.armas.nombre);
+            seleccionado->item.armas.durabilidad = mob->item.armas.durabilidad;
+            seleccionado->item.armas.ataque = mob->item.armas.ataque;
 
-            seleccionado->item.armas = mob->item.armas;
-            seleccionado->item.casco = mob->item.casco;
-            seleccionado->item.guantes = mob->item.guantes;
-            seleccionado->item.pechera = mob->item.pechera;
-            seleccionado->item.pantalones = mob->item.pantalones;
-            seleccionado->item.botas = mob->item.botas;
+            copiaArmadura(&seleccionado->item.casco, &mob->item.casco);
+            copiaArmadura(&seleccionado->item.pechera, &mob->item.pechera);
+            copiaArmadura(&seleccionado->item.guantes, &mob->item.guantes);
+            copiaArmadura(&seleccionado->item.pantalones, &mob->item.pantalones);
+            copiaArmadura(&seleccionado->item.botas, &mob->item.botas);
 
-            loot->pocion = list_create();
-            for (Pocion * p = list_first(mob->item.pocion); p != NULL; p = list_next(mob->item.pocion)){
-                Pocion * nueva = malloc(sizeof(Pocion));
-                *nueva = *p;
-                list_pushBack(loot->pocion, nueva);
+            seleccionado->item.pocion = list_create();
+            if (mob->item.pocion != NULL) {
+                for (Pocion * p = list_first(mob->item.pocion); p != NULL; p = list_next(mob->item.pocion)){
+                    Pocion * nueva = malloc(sizeof(Pocion));
+                    *nueva = *p;
+                    list_pushBack(seleccionado->item.pocion, nueva);
+                }
             }
 
             return seleccionado;
@@ -699,20 +563,26 @@ Enemigo * seleccionarEnemigo(List * enemigos){
 
 Jugador * createPlayer(char nombre[], HashMap * juego){
     Jugador * player = (Jugador *)malloc(sizeof(Jugador));
+    if (player == NULL) exit(1);
 
     strcpy(player->nombre, nombre);
     Pair * inicio = firstMap(juego);
+    if (inicio == NULL) {
+        printf("Error: No hay escenarios cargados en el juego.\n");
+        free(player);
+        return NULL;
+    }
     player->vida = 100;
     player->max_vida = 100;
     player->vida_total = 0;
-    player->estamina = 15;
-    player->max_estamina = 15;
+    player->estamina = 20;
+    player->max_estamina = 20;
     player->estamina_total = 0;
     player->defensa = 10;
     player->max_defensa = 100;
     player->defensa_total = 0;
-    player->ataque = 4;
-    player->ataque_total = 4;
+    player->ataque = 6;
+    player->ataque_total = 6;
     player->experiencia = 0;
     player->nivel = 0;
     player->actual = inicio->value;
@@ -736,6 +606,11 @@ Jugador * createPlayer(char nombre[], HashMap * juego){
     player->inventario.botas = vacia;
 
     player->inventario.pocion = list_create();
+    Pocion *p = malloc(sizeof(Pocion));
+    strcpy(p->nombre, "Pocion de Vida");
+    strcpy(p->efecto, "Vida");
+    p->valor = 20;
+    list_pushBack(player->inventario.pocion, p);
 
     player->inmunidad = false;
 
@@ -819,6 +694,215 @@ void mostrarMap(HashMap * juego){
 /*               Ciclo de Pelea               */
 /**********************************************/
 
+void guardar_item(Inventario * inv, void * item, int tipo){
+    if (!item) return;
+
+    // Comprobamos si es poción
+    if (tipo == 2) { // Poción
+        Pocion *poc = (Pocion *)item;
+        list_pushBack(inv->pocion, poc);
+        return;
+    }
+
+    // Comprobamos si es arma
+    if (tipo == 0){
+        Arma * arma = (Arma *)item;
+        if (arma->ataque > 0 && arma->durabilidad > 0){
+            printf("Arma actual: %s (Ataque: %d, Durabilidad: %d)\n", inv->armas.nombre, inv->armas.ataque, inv->armas.durabilidad);
+            printf("Nueva arma:  %s (Ataque: %d, Durabilidad: %d)\n", arma->nombre, arma->ataque, arma->durabilidad);
+            printf("Deseas reemplazar tu arma actual? (1 = SI, 0 = NO): ");
+            int decision;
+            scanf("%d", &decision);
+            if (decision == 1) {
+                inv->armas = *arma;
+                printf("Has reemplazado tu arma con exito.\n");
+            } else {
+                printf("No se reemplazo el arma.\n");
+            }
+            return;
+        }
+    }
+
+    //Comprobamos si es armadura
+    if (tipo == 1){
+        Armadura * armadura = (Armadura *)item;
+        Armadura * actual = NULL;
+        if(strcmp(armadura->tipo, "Casco") == 0) actual = &inv->casco;
+        else if (strcmp(armadura->tipo, "Pechera") == 0) actual = &inv->pechera;
+        else if (strcmp(armadura->tipo, "Guantes") == 0) actual = &inv->guantes;
+        else if (strcmp(armadura->tipo, "Pantalones") == 0) actual = &inv->pantalones;
+        else if (strcmp(armadura->tipo, "Botas") == 0) actual = &inv->botas;
+
+        if (actual) {
+            printf("\n[%s]\n", armadura->tipo);
+            printf("Armadura actual: %s %s (Defensa: %d, Durabilidad: %d)\n", actual->tipo, actual->nombre, actual->defensa, actual->durabilidad);
+            printf("Nueva armadura:  %s %s (Defensa: %d, Durabilidad: %d)\n", armadura->tipo, armadura->nombre, armadura->defensa, armadura->durabilidad);
+            printf("Deseas reemplazar esta armadura? (1 = SI, 0 = NO): ");
+            int decision;
+            scanf("%d", &decision);
+            if (decision == 1) {
+                *actual = *armadura;
+                printf("Has reemplazado la armadura con exito.\n");
+            } else {
+                printf("No se reemplazo la armadura.\n");
+            }
+        }
+    }
+}
+
+void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
+    limpiarPantalla();
+
+    Inventario *loot = &enemigo->item;
+
+    // Crear lista con los 7 ítems fijos
+    ItemAux items_fijos[7];
+    int total_fijos = 0;
+
+    // Copiar arma
+    Arma *arma = malloc(sizeof(Arma));
+    *arma = loot->armas;
+    items_fijos[total_fijos].tipo = 0;
+    items_fijos[total_fijos++].ptr = arma;
+
+    // Copiar armaduras
+    Armadura *casco = malloc(sizeof(Armadura)); 
+    *casco = loot->casco;
+    items_fijos[total_fijos].tipo = 1;
+    items_fijos[total_fijos++].ptr = casco;
+
+    Armadura *guantes = malloc(sizeof(Armadura)); 
+    *guantes = loot->guantes;
+    items_fijos[total_fijos].tipo = 1;
+    items_fijos[total_fijos++].ptr = guantes;
+
+    Armadura *pechera = malloc(sizeof(Armadura)); 
+    *pechera = loot->pechera;
+    items_fijos[total_fijos].tipo = 1;
+    items_fijos[total_fijos++].ptr = pechera;
+
+    Armadura *pantalones = malloc(sizeof(Armadura)); 
+    *pantalones = loot->pantalones;
+    items_fijos[total_fijos].tipo = 1;
+    items_fijos[total_fijos++].ptr = pantalones;
+
+    Armadura *botas = malloc(sizeof(Armadura)); 
+    *botas = loot->botas;
+    items_fijos[total_fijos].tipo = 1;
+    items_fijos[total_fijos++].ptr = botas;
+
+    // Copiar poción (si existe)
+    Pocion *p = NULL;
+    if (loot->pocion != NULL)
+        p = list_first(loot->pocion);
+    if (p) {
+        Pocion *pocion = malloc(sizeof(Pocion));
+        *pocion = *p;
+        items_fijos[total_fijos].tipo = 2;
+        items_fijos[total_fijos++].ptr = pocion;
+    }
+
+    // Mezclar los ítems
+    srand(time(NULL));
+    for (int i = total_fijos - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        ItemAux tmp = items_fijos[i];
+        items_fijos[i] = items_fijos[j];
+        items_fijos[j] = tmp;
+    }
+
+    // Elegir cuántos mostrar (entre 1 y total_fijos)
+    int cantidad_a_mostrar = (rand() % total_fijos) + 1;
+
+    List *items_posibles = list_create();
+    for (int i = 0; i < cantidad_a_mostrar; i++) {
+        ItemAux *nuevo = malloc(sizeof(ItemAux));
+        *nuevo = items_fijos[i];
+        list_pushBack(items_posibles, nuevo);
+    }
+
+    while (1) {
+        if (list_first(items_posibles) == NULL){
+            puts("HAS RECOGIDO TODOS LOS OBJETOS");
+            break;
+        }
+
+        puts("=== OBJETOS DEL ENEMIGO ===");
+
+        int index = 1;
+        void *objeto = list_first(items_posibles);
+        List *temp = list_create();
+        
+        while (objeto != NULL) {
+            ItemAux *item = (ItemAux *)objeto;
+            list_pushBack(temp, item);
+
+            if (item->tipo == 0) {
+                Arma *a = (Arma *)item->ptr;
+                printf("%d) [ARMA] %s - Ataque: %d - Durabilidad: %d\n", index, a->nombre, a->ataque, a->durabilidad);
+            } else if (item->tipo == 1) {
+                Armadura *arm = (Armadura *)item->ptr;
+                printf("%d) [ARMADURA] %s %s - Defensa: %d - Durabilidad: %d\n", index, arm->tipo, arm->nombre, arm->defensa, arm->durabilidad);
+            } else if (item->tipo == 2) {
+                Pocion *poc = (Pocion *)item->ptr;
+                printf("%d) [POCION] %s - %s (%d)\n", index, poc->nombre, poc->efecto, poc->valor);
+            }
+            index++;
+            objeto = list_next(items_posibles);
+        }
+
+        printf("%d) TOMAR TODO\n", index);
+        printf("%d) CANCELAR\n", index + 1);
+        printf("\nSELECCIONE UNA OPCION: ");
+        
+        int opcion;
+        scanf("%d", &opcion);
+
+        if (opcion == index + 1 || opcion <= 0) {
+            puts("CANCELANDO O OPCION INVALIDA");
+            //presioneTeclaParaContinuar();
+            break;
+        }
+
+        if (opcion == index) {
+            for (ItemAux *elemento = list_first(items_posibles); elemento != NULL; elemento = list_next(items_posibles)) {
+                guardar_item(&player->inventario, elemento->ptr, elemento->tipo);
+                free(elemento->ptr);
+                free(elemento);
+            }
+            puts("HAS RECOGIDO TODOS LOS OBJETOS");
+            //presioneTeclaParaContinuar();
+            break;
+        } else {
+            int actual = 1;
+            ItemAux *item = list_first(temp);
+            while (item != NULL && actual < opcion) {
+                item = list_next(temp);
+                actual++;
+            }
+
+            if (item != NULL) {
+                guardar_item(&player->inventario, item->ptr, item->tipo);
+
+                // ...dentro de recoger_items_enemigo, al tomar un ítem individual...
+                List *nueva = list_create();
+                for (ItemAux *it = list_first(items_posibles); it != NULL; it = list_next(items_posibles)) {
+                    if (it != item) list_pushBack(nueva, it);
+                    else {
+                        free(it->ptr);
+                        free(it);
+                    }
+                }
+                list_free(items_posibles); // Libera la lista anterior completamente
+                items_posibles = nueva;    // Usa la nueva lista
+
+                puts("Objeto recogido con exito.");
+                //presioneTeclaParaContinuar();
+            }
+        }
+    }
+}
+
 bool usarPociones(Jugador * player){
     limpiarPantalla();
     if (list_size(player->inventario.pocion) == 0){
@@ -847,11 +931,15 @@ bool usarPociones(Jugador * player){
     }
 
     // Mover `current` al nodo de la poción seleccionada
-    list_first(player->inventario.pocion); // Reset current to head
+    Pocion *seleccionada = (Pocion *)list_first(player->inventario.pocion);
     for (int i = 1; i < opcion; i++) {
-        list_next(player->inventario.pocion); // Move current to the selected potion
+        seleccionada = (Pocion *)list_next(player->inventario.pocion);
     }
-    Pocion *seleccionada = (Pocion *)list_next(player->inventario.pocion); // current ahora apunta a la pocion
+    if (!seleccionada) {
+        puts("Error al seleccionar la pocion.");
+        presioneTeclaParaContinuar();
+        return false;
+    }
 
     printf("Usaste la pocion: %s\n", seleccionada->nombre);
     if (strcmp(seleccionada->efecto, "Vida") == 0){
@@ -860,13 +948,13 @@ bool usarPociones(Jugador * player){
         printf("Tu vida actual es: %d", player->vida);
     }
     else if (strcmp(seleccionada->efecto, "Inmunidad") == 0){
-        player->inmunidad = true;
+        player->inmunidad = seleccionada->valor;
         puts("¡Ahora eres inmune temporalmente!");
     }
     else if (strcmp(seleccionada->efecto, "Escudo") == 0){
         player->defensa += seleccionada->valor;
         if (player->defensa > player->max_defensa) player->defensa = player->max_defensa;
-        printf("Tu defensa aumentó a: %d\n", player->defensa);
+        printf("Tu defensa aumento a: %d\n", player->defensa);
     }
     else if (strcmp(seleccionada->efecto, "Estamina") == 0){
         player->estamina += seleccionada->valor;
@@ -911,19 +999,19 @@ void calcularEstatsT(Jugador * player){
         aplicarBufo(player, player->inventario.casco.bufo, player->inventario.casco.valor);
     }
     if (strcmp(player->inventario.pechera.nombre, "Sin armadura") != 0){
-        player->defensa_total += player->inventario.casco.defensa;
+        player->defensa_total += player->inventario.pechera.defensa;
         aplicarBufo(player, player->inventario.pechera.bufo, player->inventario.pechera.valor);
     }
     if (strcmp(player->inventario.guantes.nombre, "Sin armadura") != 0){
-        player->defensa_total += player->inventario.casco.defensa;
+        player->defensa_total += player->inventario.guantes.defensa;
         aplicarBufo(player, player->inventario.guantes.bufo, player->inventario.guantes.valor);
     }
     if (strcmp(player->inventario.pantalones.nombre, "Sin armadura") != 0){
-        player->defensa_total += player->inventario.casco.defensa;
+        player->defensa_total += player->inventario.pantalones.defensa;
         aplicarBufo(player, player->inventario.pantalones.bufo, player->inventario.pantalones.valor);
     }
     if (strcmp(player->inventario.botas.nombre, "Sin armadura") != 0){
-        player->defensa_total += player->inventario.casco.defensa;
+        player->defensa_total += player->inventario.botas.defensa;
         aplicarBufo(player, player->inventario.botas.bufo, player->inventario.botas.valor);
     }
 }
@@ -934,17 +1022,33 @@ void reiniciarArma(Arma * arma){
     arma->durabilidad = 0;
 }
 
-bool ataque(Jugador * player, Enemigo * enemigo){
-    enemigo->vida -= ((player->ataque_total * player->ataque_total) / (player->ataque_total + enemigo->defensa)); // El enemigo recibe daño del jugador
-    player->inventario.armas.durabilidad -=1;
-    if (player->inventario.armas.durabilidad == 0){
+bool realizarAtaque(Jugador *player, Enemigo *enemigo, bool especial) {
+    int multiplicador = especial ? 2 : 1;
+    int costo_estamina = especial ? -5 : 1; // -5 para restar 5 en especial, 1 para sumar 1 en normal
+
+    int dano = multiplicador * ((player->ataque_total * player->ataque_total) / (player->ataque_total + enemigo->defensa));
+    enemigo->vida -= dano;
+    player->inventario.armas.durabilidad -= 1;
+    player->estamina += costo_estamina;
+
+    if (player->inventario.armas.durabilidad == 0) {
         printf("Tu %s se ha roto", player->inventario.armas.nombre);
         reiniciarArma(&player->inventario.armas);
     }
-    if (enemigo->vida <= 0){
+    if (enemigo->vida <= 0) {
         puts("El enemigo ha sido derrotado!");
         player->experiencia+= enemigo->exp_dada;
-        //recoger_items_enemigos(player, enemigo);
+
+        if(strcmp(enemigo->nombre, "Creeper") == 0)
+        {
+            player->vida -= 10;
+            printf("El %s ha explotado!!. te ha quitado 10 de vida :(\n", enemigo->nombre);
+            presioneTeclaParaContinuar();
+        } 
+        if (strcmp(enemigo->dificultad, "Boss") == 0) {
+        victoria();
+        }
+        recoger_items_enemigo(player, enemigo);
         return false;
     }
     return true;
@@ -968,6 +1072,12 @@ void perdidaDurabilidad(Armadura * aux){
 }
 
 void ataqueEnemigo(Jugador * player, Enemigo * enemigo){
+    
+    if(player->inmunidad) {
+        puts("¡El enemigo no puede dañarte, estas inmune!");
+        (player->inmunidad)--; // Desactiva la inmunidad después de un ataque
+        return;
+    }
 
     int dano = (int)((enemigo->ataque * enemigo->ataque) / (enemigo->ataque + player->defensa_total));
     player->vida -= dano;
@@ -1005,7 +1115,7 @@ bool cicloPelea(Jugador * player, List * enemigos)
 
     //calcularDefensaActual(player);
     if (enemigo == NULL) {
-        printf("No se encontró ningún enemigo para pelear en esta zona.\n");
+        printf("No se encontro ningun enemigo para pelear en esta zona.\n");
         presioneTeclaParaContinuar(); // Pausa para que el usuario lea el mensaje
         return true; // El jugador sigue vivo, pero no hubo pelea.
     }
@@ -1018,8 +1128,8 @@ bool cicloPelea(Jugador * player, List * enemigos)
         
         printf("Jugador: %s | Vida: %d | Estamina: %d | Ataque: %d | Defensa: %d\n",
             player->nombre, player->vida, player->estamina, player->ataque_total, player->defensa_total);
-        printf("Enemigo: %s | Vida: %d | Defensa: %d\n",
-            enemigo->nombre, enemigo->vida, enemigo->defensa);
+        printf("Enemigo: %s | Vida: %d | Defensa: %d | Dificultad : %s\n",
+            enemigo->nombre, enemigo->vida, enemigo->defensa, enemigo->dificultad);
         
         menuOpcionesPelea(); // Muestra el menú de opciones de pelea
         bool repetirAccion = false; // Variable para controlar si se repite la acción
@@ -1031,16 +1141,19 @@ bool cicloPelea(Jugador * player, List * enemigos)
         switch (opcion)
         {
         case '1':
-            EnemigoVivo = ataque(player, enemigo);
+            EnemigoVivo = realizarAtaque(player, enemigo, NORMAL);
             break;
         case '2':
-            repetirAccion = usarPociones(player); // El jugador usa una poción
+            EnemigoVivo = realizarAtaque(player, enemigo, ESPECIAL);
             break;
         case '3':
+            repetirAccion = usarPociones(player); // El jugador usa una poción
+            break;
+        case '4':
             if(huida(player, enemigo)) return true;
             break;
         default:
-            puts("Opción no válida, por favor intente de nuevo.");
+            puts("Opcion no valida, por favor intente de nuevo.");
             repetirAccion = true; // Repite la acción si la opción no es válida
             break;
         }
@@ -1074,18 +1187,15 @@ void seleccionOpcion(Jugador * player)
         switch (op) {
             case '1':
                 //explorarZonas(); //FUNCIÓN PARA EXPLORAR LAS ZONAS
-                movermeDeEscenario(player);
+                jugadorVivo = movermeDeEscenario(player);
                 break;
             case '2':
-                //verEstado(); //FUNCIÓN PARA VER EL INVENTARIO DEL JUGADOR
+                verEstado(player); //FUNCIÓN PARA VER EL ESTADO E INVENTARIO DEL JUGADOR
                 break;
             case '3':
-                //recolectarItems(); //FUNCIÓN PARA RECOLECTAR LOS ITEMS DE LA ZONA
-                break;
-            case '4':
                 jugadorVivo = cicloPelea(player, player->actual->Enemigos); // Ciclo de pelea con los enemigos de la zona actual
                 break;
-            case '5':
+            case '4':
                 //equipar_DesequiparItem(); //FUNCIÓN PARA EQUIPAR Y DESEQUIPAR ITEMS
                 return;
             default:
@@ -1096,72 +1206,176 @@ void seleccionOpcion(Jugador * player)
     } // El bucle continuará mientras el jugador esté activo
 }
 
+void seleccionOpcionAyuda()
+{
+    char op;
+    int cantidad;
+    while(1)
+    {
+        //Se muestra el menú de ayuda y se pide una opción
+        mostrarMenuAyuda();
+        printf("INGRESE SU OPCION: ");
+        scanf(" %c", &op);
+
+        //Se realizan las acciones según la opción seleccionada
+        switch (op) {
+            case '1':
+                limpiarPantalla();
+
+                puts("========================================");
+                puts("              MOVIMIENTOS                ");
+                puts("========================================");
+                
+                const char* movimiento[] = {
+                    "Para avanzar en tu aventura, selecciona la opcion (EXPLORAR ZONAS) desde el menu de juego.",
+                    "Dependiendo de las zonas disponibles, podras moverte por el mapa utilizando las teclas:",
+                    "    W - Arriba", "    A - Izquierda", "    S - Abajo", "    D - Derecha",
+                    "Cada zona oculta secretos, enemigos o tesoros. Piensa bien cada paso...",
+                    "en Umbrahal, el peligro acecha en cada rincon.", ""
+                };
+
+                cantidad = sizeof(movimiento) / sizeof(movimiento[0]);
+
+                for (int i = 0; i < cantidad; i++) {
+                    printf("%s\n", movimiento[i]);
+                    esperar(1);         // Espera 1 segundos
+                }
+                break;
+            case '2':
+                limpiarPantalla();
+                puts("========================================");
+                puts("                ENEMIGOS                ");
+                puts("========================================");
+
+                const char* enemigos[] = {
+                    "En las profundidades de Umbrahal, te enfrentaras a criaturas del inframundo que buscan detenerte.",
+                    "Estos enemigos varian en dificultad: FACIL, MEDIO, DIFICIL y el temible BOSS.", "",
+                    "A medida que avances por los pisos de la masmorra, los enemigos se volveran mas agresivos y letales.",
+                    "Cada encuentro será un reto, y solo los más preparados sobrevivirán. Los enemigos aparecen de forma",
+                    "aleatoria, y su dificultad dependera del area en la que te encuentres.", "",
+                    "Derrotarlos no solo sera necesario para sobrevivir, tambien puede recompensarte con items valiosos",
+                    "que podrian cambiar el curso de tu destino.", ""
+                };
+
+                cantidad = sizeof(enemigos) / sizeof(enemigos[0]);
+
+                for (int i = 0; i < cantidad; i++) {
+                    printf("%s\n", enemigos[i]);
+                    esperar(1);         // Espera 1 segundos
+                }
+                break;
+            case '3':
+                limpiarPantalla();
+                puts("========================================");
+                puts("                EQUIPAMENTO             ");
+                puts("========================================");
+                
+                const char* equip[] = {
+                    "En tu descenso por la Masmorra de Umbrahal, encontraras items esenciales que marcaran la diferencia",
+                    "entre la vida y la muerte.", "",
+                    "Las armaduras te otorgan proteccion contra los ataques del inframundo, reduciendo el daño recibido.",
+                    "Las pociones restauran salud o brindan efectos temporales como inmunidad o estamina.", "",
+                    "Explora bien cada escenario. El equipamiento correcto puede ser la clave para sobrevivir... o caer.", ""
+                };
+
+                cantidad = sizeof(equip) / sizeof(equip[0]);
+
+                for (int i = 0; i < cantidad; i++) {
+                    printf("%s\n", equip[i]);
+                    esperar(1);         // Espera 1 segundos
+                }
+                break;
+            case '4':
+                limpiarPantalla();
+                printf("VOLVIENDO AL MENU PRINCIPAL.\n");
+                return;
+            default:
+                limpiarPantalla();
+                printf("OPCION NO VALIDA.\n");
+                break;
+        }
+        presioneTeclaParaContinuar();
+    } // El bucle continuará mientras el jugador esté activo
+}
+
 void lvlup(Jugador *jugador) {
     jugador->nivel++;
-    jugador->vida += 5; // Incrementa la vida al subir de nivel
+    jugador->max_vida += 5; // Incrementa la vida al subir de nivel
     jugador->ataque += 2; // Incrementa el ataque al subir de nivel
-    jugador->defensa += 1; // Incrementa la defensa al subir de nivel
+    jugador->max_defensa += 1; // Incrementa la defensa al subir de nivel
     printf("¡Felicidades! Has subido al nivel %d.\n", jugador->nivel);
 }
 
-void movermeDeEscenario(Jugador *jugador)
+bool movermeDeEscenario(Jugador *jugador)
 {
     char direccion;
     int movimiento = 0;
+    bool jugadorVivo = true;
 
     do {
         limpiarPantalla();
-        printf("Estás en: %s\n", jugador->actual->nombre);
-        printf("¿A dónde deseas moverte?\n");
+        
+        if (!jugadorVivo) break;
+
+        printf("Estas en: %s\n", jugador->actual->nombre);
+        printf("A donde deseas moverte?\n");
 
         if (jugador->actual->arriba)
-            printf("  Arriba (w): %s\n", jugador->actual->arriba->nombre);
+            printf("- Arriba (w): %s\n", jugador->actual->arriba->nombre);
         if (jugador->actual->abajo)
-            printf("  Abajo (s): %s\n", jugador->actual->abajo->nombre);
+            printf("- Abajo (s): %s\n", jugador->actual->abajo->nombre);
         if (jugador->actual->izquierda)
-            printf("  Izquierda (a): %s\n", jugador->actual->izquierda->nombre);
+            printf("- Izquierda (a): %s\n", jugador->actual->izquierda->nombre);
         if (jugador->actual->derecha)
-            printf("  Derecha (d): %s\n", jugador->actual->derecha->nombre);
+            printf("- Derecha (d): %s\n", jugador->actual->derecha->nombre);
 
         printf("\nSolo se muestran las direcciones disponibles.\n");
-        printf("Ingrese dirección (w/a/s/d): ");
+        printf("Ingrese direccion (w/a/s/d): ");
         scanf(" %c", &direccion);
 
         switch (direccion) {
             case 'w':
+            case 'W':
                 if (jugador->actual->arriba) {
                     jugador->actual = jugador->actual->arriba;
                     movimiento = 1;
+                    jugadorVivo = cicloPelea(jugador, jugador->actual->Enemigos);
                 } else {
-                    printf("No puedes moverte en esa dirección.\n");
+                    printf("No puedes moverte en esa direccion.\n");
                 }
                 break;
             case 'a':
+            case 'A':
                 if (jugador->actual->izquierda) {
                     jugador->actual = jugador->actual->izquierda;
                     movimiento = 1;
+                    jugadorVivo = cicloPelea(jugador, jugador->actual->Enemigos);
                 } else {
-                    printf("No puedes moverte en esa dirección.\n");
+                    printf("No puedes moverte en esa direccion.\n");
                 }
                 break;
             case 's':
+            case 'S':
                 if (jugador->actual->abajo) {
                     jugador->actual = jugador->actual->abajo;
                     movimiento = 1;
+                    jugadorVivo = cicloPelea(jugador, jugador->actual->Enemigos);
                 } else {
-                    printf("No puedes moverte en esa dirección.\n");
+                    printf("No puedes moverte en esa direccion.\n");
                 }
                 break;
             case 'd':
+            case 'D':
                 if (jugador->actual->derecha) {
                     jugador->actual = jugador->actual->derecha;
                     movimiento = 1;
+                    jugadorVivo = cicloPelea(jugador, jugador->actual->Enemigos);
                 } else {
-                    printf("No puedes moverte en esa dirección.\n");
+                    printf("No puedes moverte en esa direccion.\n");
                 }
                 break;
             default:
-                printf("Dirección inválida. Intenta nuevamente.\n");
+                printf("Direccion invalida. Intenta nuevamente.\n");
                 break;
         }
 
@@ -1170,7 +1384,94 @@ void movermeDeEscenario(Jugador *jugador)
         }
 
     } while (!movimiento);
+    limpiarPantalla();
+    puts("========================================");
+    puts("               FALTA XP");
+    puts("========================================");
+    printf("Te has movido a: %s\n\n", jugador->actual->nombre);
+}
 
-    printf("Te has movido a: %s\n", jugador->actual->nombre);
+void verEstado(Jugador *player)
+{
+    int n = 0;
+    limpiarPantalla();
+    puts("========================================");
+    puts("           ESTADO DEL JUGADOR           ");
+    puts("========================================");
+    printf("Jugador: %s | Vida: %d | Estamina: %d | Ataque: %d | Defensa: %d | Nivel: %d\n",
+            player->nombre, player->vida, player->estamina, player->ataque_total, player->defensa_total, 
+            player->nivel);
+    printf("Te encuentras en: %s\n", player->actual->nombre);
+    if(strcmp(player->inventario.armas.nombre, "Sin arma") == 1) printf("[ARMA]: %s\n", player->inventario.armas.nombre);
+    if(strcmp(player->inventario.casco.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Casco %s\n", player->inventario.casco.nombre);
+    if(strcmp(player->inventario.pechera.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Pechera %s\n", player->inventario.pechera.nombre);
+    if(strcmp(player->inventario.guantes.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Guantes %s\n", player->inventario.guantes.nombre);
+    if(strcmp(player->inventario.pantalones.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Pantalon %s\n\n", player->inventario.pantalones.nombre);
+    if(strcmp(player->inventario.botas.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Botas %s\n\n", player->inventario.botas.nombre);
+    if(list_first(player->inventario.pocion) != NULL)
+    {
+        printf("[POCIONES]:\n");
+        void *dato = list_first(player->inventario.pocion);
+        int i = 1;
+        while (dato != NULL) {
+            Pocion *p = (Pocion *)dato;
+            printf("%d) %s | Efecto: %s | Valor: %d\n", i++, p->nombre, p->efecto, p->valor);
+            dato = list_next(player->inventario.pocion);
+        }
+    }
+    
+}
+
+void victoria()
+{
+    limpiarPantalla();
+    puts("========================================");
+    puts("               VICTORIA                 ");
+    puts("========================================");
+    puts("¡Felicidades! Has derrotado al Rey Demonio y has completado el juego.");
+    puts("Gracias por jugar a Falta Xp.");
+    puts("========================================");
     presioneTeclaParaContinuar();
+    mostrarCreditos();
+    presioneTeclaParaContinuar();
+    liberarMemoria(g_player, g_juego, g_mobs, g_facil, g_medio, g_dificil);
+    exit(0);
+    
+}
+
+void liberarMemoria(Jugador *player,HashMap *juego,HashMap *mobs,List *facil,List *medio,List *dificil)
+{
+    // 1) Inventario del jugador
+    list_clean(player->inventario.pocion);
+    list_free(player->inventario.pocion);
+    free(player);
+
+    // 2) Escenarios
+    // Liberamos cada Escenarios* guardado en el map
+    for (Pair *par = firstMap(juego); par != NULL; par = nextMap(juego)) {
+        free(par->value);  // cada Escenarios* fue malloc()
+    }
+    // Limpiamos y destruimos el HashMap
+    cleanMap(juego); // libera internamente cada Pair
+    free(juego);
+
+    for(Enemigo *n = list_first(facil); n != NULL; n = list_next(facil)) {
+        list_free(n->item.pocion);
+        free(n);
+    }
+    for(Enemigo *n = list_first(medio); n != NULL; n = list_next(medio)) {
+        list_free(n->item.pocion);
+        free(n);
+    }
+    for(Enemigo *n = list_first(dificil); n != NULL; n = list_next(dificil)) {
+        list_free(n->item.pocion);
+        free(n);
+    }
+    // 4) Listas de dificultad (compartidas entre escenarios)
+    list_free(facil);
+    list_free(medio);
+    list_free(dificil);
+
+    cleanMap(mobs);
+    free(mobs);
 }
