@@ -16,7 +16,6 @@ typedef struct{
     int durabilidad;
     char bufo[50];
     int valor;
-    //int nivel_requerido;
 }Armadura;
 
 typedef struct{
@@ -111,8 +110,8 @@ void mostrarMenuJuego();
 void menuOpcionesPelea();
 
 void leer_escenarios(HashMap * );
-void leer_mobs(HashMap * );
-void asignar_mobs(HashMap * , HashMap * );
+void leer_mobs(HashMap * , List * , List * , List * );
+void asignar_mobs(HashMap * , HashMap * , List * , List * , List * );
 Enemigo * seleccionarEnemigo(List * );
 Jugador * createPlayer(char * , HashMap * );
 
@@ -146,6 +145,9 @@ void lvlup(Jugador * );
 int main(){
     HashMap *juego = createMap(100); // Crea un HashMap para almacenar los escenarios
     HashMap *mobs = createMap(100); // Crea un HashMap para almacenar los monstruos
+    List * facil = list_create();
+    List * medio = list_create();
+    List * dificil = list_create();
     Jugador * player = NULL;
     if (juego == NULL) {
         fprintf(stderr, "Error al crear el HashMap\n");
@@ -154,9 +156,9 @@ int main(){
     srand(time(NULL));
     leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
     //mostrarMap(juego);
-    leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
+    leer_mobs(mobs, facil, medio, dificil); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
     //mostrar_mobs(mobs); // Muestra el contenido del HashMap
-    asignar_mobs(juego, mobs);
+    asignar_mobs(juego, mobs, facil, medio, dificil);
 
     char op;
     char name[50];
@@ -361,7 +363,7 @@ void leer_escenarios(HashMap * juego){
     free(claves);
 }
 
-void leer_mobs(HashMap *mobs) {
+void leer_mobs(HashMap *mobs, List * facil, List * media, List * dificil) {
     FILE *archivo = fopen("data/enemigos.csv", "r");
     if (!archivo) {
         perror("Error al abrir data/enemigos.csv");
@@ -446,6 +448,10 @@ void leer_mobs(HashMap *mobs) {
         }
         // ----------------------------------------------------------------
 
+        if (strcmp(e->dificultad, "Facil")) list_pushBack(facil, e);
+        if (strcmp(e->dificultad, "Media")) list_pushBack(media, e);
+        if (strcmp(e->dificultad, "Dificil")) list_pushBack(dificil, e);
+
         // Insertar en el HashMap
         insertMap(mobs, e->nombre, e);
     }
@@ -457,19 +463,15 @@ void leer_mobs(HashMap *mobs) {
 /*          Asignar mobs a escenarios         */
 /**********************************************/
 
-void asignar_mobs(HashMap * escenarios, HashMap * mobs){
+void asignar_mobs(HashMap * escenarios, HashMap * mobs, List * facil, List * media, List * dificil){
     for (Pair * esc = firstMap(escenarios); esc != NULL; esc = nextMap(escenarios)){
         Escenarios * escenario = esc->value;
 
         escenario->Enemigos = list_create();
 
-        for (Pair * par_mob = firstMap(mobs); par_mob != NULL; par_mob = nextMap(mobs)){
-            Enemigo * mob = par_mob->value;
-
-            if (strcmp(mob->dificultad, escenario->dificultad) == 0){
-                list_pushBack(escenario->Enemigos, mob);
-            }
-        }
+        if (strcmp(escenario->dificultad, "Facil")) escenario->Enemigos = facil;
+        if (strcmp(escenario->dificultad, "Media")) escenario->Enemigos = media;
+        if (strcmp(escenario->dificultad, "Dificil")) escenario->Enemigos = dificil;
     }
 }
 
