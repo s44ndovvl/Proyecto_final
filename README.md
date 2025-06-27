@@ -67,6 +67,7 @@ Este sistema ha sido desarrollado en lenguaje C y puede ejecutarse fácilmente u
 ### Problemas conocidos:
 
 -Problemas con la muestra de texto en consola, sobre todo con las tildes o caracteres que no pertenecen al vocabulario ingles.
+-La presentacion y datos de las posiciones (consumibles), podrian llegar a corromperse. Si esto ocurre, la recomendacion es crear el ejecutable y abrirlo desde el explorador de archivo: haga la conbinacion de teclas crtl + shitf + r. Una vez abierto el explorador de archivo solo habra el ejecutable que creo y deberia poder ejecutar el programa sin problemas.
 
 
 ### A mejorar:
