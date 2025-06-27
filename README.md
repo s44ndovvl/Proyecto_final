@@ -82,9 +82,42 @@ Este sistema ha sido desarrollado en lenguaje C y puede ejecutarse fácilmente u
 
 ## Ejemplo de uso
 
-# Paso :
-# Paso :
-# paso intermedio:
+# Paso 2: Opcion de ayuda
+
+Se despliegan las opciones del menu pricipal: "1) INICIAR NUEVA PARTIDA 2) AYUDA 3) CREDITOS 4) SALIR ", y se selecciona la de ayuda, para poder entender mejor como se interacciona con el juego.
+
+Opción seleccionada: 2) AYUDA
+
+Se despliegan 4 opciones, 3 son mini tutoriales del funcionamiento de los enemigos y la otra para volver al menu principal. Se busca saber mas sobre la exploracion.
+
+Opción seleccionada: 1) SOBRE LOS MOVIMIENTOS
+
+se muestra el mensaje "Para avanzar en tu aventura, selecciona la opcion (EXPLORAR ZONAS) desde el menu de juego. Dependiendo de las zonas disponibles, podras moverte por el mapa utilizando las teclas:    
+                W - Arriba    A - Izquierda    S - Abajo    D - Derecha 
+Cada zona oculta secretos, enemigos o tesoros. Piensa bien cada paso... en Umbrahal, el peligro acecha en cada rincon" y se vuelve al menu de ayuda.
+
+Opción seleccionada: 2) SOBRE LOS ENEMIGOS
+
+se muestra el mensaje "En las profundidades de Umbrahal, te enfrentaras a criaturas del inframundo que buscan detenerte. Estos enemigos varian en dificultad: FACIL, MEDIO, DIFICIL y el temible BOSS.
+A medida que avances por los pisos de la masmorra, los enemigos se volveran mas agresivos y letales. Cada encuentro será un reto, y solo los más preparados sobrevivirán. Los enemigos aparecen de forma aleatoria, y su dificultad dependera del area en la que te encuentres.Derrotarlos no solo sera necesario para sobrevivir, tambien puede recompensarte con items valiosos que podrian cambiar el curso de tu destino." y se vuelve al menu de ayuda.
+
+Opción seleccionada: 3) SOBRE EL EQUIPAMENTO
+
+se muestra el mensaje "En tu descenso por la Masmorra de Umbrahal, encontraras items esenciales que marcaran la diferencia entre la vida y la muerte. Las armaduras te otorgan proteccion contra los ataques del inframundo, reduciendo el daño recibido. Las pociones restauran salud o brindan efectos temporales como inmunidad o estamina. Explora bien cada escenario. El equipamiento correcto puede ser la clave para sobrevivir... o caer." y se vuelve al menu de ayuda.
+
+Opción seleccionada: 4) VOLVER AL MENU PRINCIPAL
+
+se vuelve a las opciones del menu principal
+
+# Paso 2: Iniciar partida
+
+Una vez se vuelve al menu principal, y con mas contexto sobre como funciona las mecanicas del juego se busca iniciar partida.
+
+Opción seleccionada: 1) INICIAR NUEVA PARTIDA
+
+se inicia una nueva partida y se muestran las opciones del menu de exploracion: "1) EXPLORAR ZONAS 2) VER ESTADO DEL JUGADOR 3) ATACAR A UN ENEMIGO 4) SALIR AL MENU PRINCIPAL"
+
+# paso 3: Cambiar de sala
 # Paso :
 # Paso :
 # Paso :
