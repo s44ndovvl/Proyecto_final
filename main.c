@@ -639,7 +639,7 @@ Jugador * createPlayer(char nombre[], HashMap * juego){
     player->max_estamina = 20;
     player->estamina_total = 0;
     player->defensa = 10;
-    player->max_defensa = 100;
+    player->max_defensa = 10;
     player->defensa_total = 0;
     player->ataque = 6;
     player->ataque_total = 6;
