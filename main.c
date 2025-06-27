@@ -1216,7 +1216,6 @@ void lvlup(Jugador *jugador) {
     jugador->vida += 5; // Incrementa la vida al subir de nivel
     jugador->ataque += 2; // Incrementa el ataque al subir de nivel
     jugador->defensa += 1; // Incrementa la defensa al subir de nivel
-    jugador->tope_experiencia += 20; // Aumenta el tope de experiencia necesario para el siguiente nivel
     printf("¡Felicidades! Has subido al nivel %d.\n", jugador->nivel);
 }
 
