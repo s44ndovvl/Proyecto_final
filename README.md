@@ -197,7 +197,7 @@ Una vez superada la primera batalla se decide cambiar de escenario en el menu de
 
 Opción seleccionada: 1) EXPLORAR ZONAS
 
-Cuando se cambia de escenario, se llama a batalla inmediatamente y luego si esa batalla sale satisfactoria se indica el nombre del nuevo escenario y su leyenda: "Te has movido a: Pasillo de los Susurros
+Cuando se cambia de escenario, se llama a batalla inmediatamente y luego si esa batalla sale satisfactoria se indica el nombre del nuevo escenario y su leyenda: "Te has movido a: Pasillo de los Susurros. Las paredes murmuran secretos en lenguas que no comprendes."
 
 # Paso 10: Creditos
 
@@ -237,7 +237,7 @@ Cuando ya deseas acabar la expiercia total, simplemente seleccionas salir del ma
 
 Opción seleccionada: 4) SALIR
 
-Se acaba la ejecucion del programa
+Se acaba la ejecucion del programa.
 
 # Contribuciones 
 

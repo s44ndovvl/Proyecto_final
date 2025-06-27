@@ -1472,7 +1472,8 @@ bool movermeDeEscenario(Jugador *jugador)
     puts("========================================");
     puts("               FALTA XP");
     puts("========================================");
-    printf("Te has movido a: %s\n\n", jugador->actual->nombre);
+    printf("Te has movido a: %s\n", jugador->actual->nombre);
+    printf("%s\n\n", jugador->actual->leyenda);
 }
 
 /**********************************************/
