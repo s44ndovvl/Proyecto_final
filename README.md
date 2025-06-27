@@ -115,7 +115,9 @@ Una vez se vuelve al menu principal, y con mas contexto sobre como funciona las 
 
 Opción seleccionada: 1) INICIAR NUEVA PARTIDA
 
-se inicia una nueva partida y se muestran las opciones del menu de exploracion: "1) EXPLORAR ZONAS 2) VER ESTADO DEL JUGADOR 3) ATACAR A UN ENEMIGO 4) SALIR AL MENU PRINCIPAL"
+INDIQUE EL NOMBRE DEL NUEVO JUGADOR: edu
+
+se inicia una nueva partida, creando e inicializando al jugador edu. Se muestran las opciones del menu de exploracion: "1) EXPLORAR ZONAS 2) VER ESTADO DEL JUGADOR 3) ATACAR A UN ENEMIGO 4) SALIR AL MENU PRINCIPAL"
 
 # paso 3: Entrar en combate
 
@@ -131,17 +133,112 @@ Para hacerle daño al enemigo puedes elegir entre ataque especial, o el ataque n
 
 Opción seleccionada: 2) ATAQUE ESPECIAL
 
-El jugador pierde 5 de estamina, y despues del ataque del enemigo pierde cierta cantidad de vida. Se vuelve al menu de pelea
+El jugador pierde 5 de estamina, y despues del ataque del enemigo pierde cierta cantidad de vida. Se vuelve al menu de pelea.
 
-# Paso 5: Usar un consumible
-# Paso :
-# Paso :
-# Paso :
-# Paso :
-# Paso :
-# Paso :
-# Paso :
-# Paso :
+# Paso 5: Intentar huir.
+
+Si no ve el escenario del combate muy a su favor, puede intentar huir. Aunque con menos estadisticas de vida y estamina este, más le costara esta accion.
+
+Opción seleccionada: 4) HUIR DE LA PELEA.
+
+El enemigo, no te dejo huir de la pelea y te dio un ataque, que te resto más vida. 
+
+# Paso 6: Usar un consumible.
+
+El jugador perdio algo de vida asi que busca recuperarla usando algun consumible.
+
+Opción seleccionada: 3) USAR POCION
+
+=== POCIONES DISPONIBLES ===
+1) Pocion de Vida - Vida (+20)
+2) Cancelar
+Seleccione la opcion a usar: 
+
+Opción seleccionada: 1) Pocion de Vida - Vida (+20)
+
+Utilizas la pocion de vida, y recuperas 20 de vida, luego vuelves al menu de pelea.
+
+# Paso 7: Recolectar items.
+
+Una vez que el enemigo es derrotada este suelta de manera aleatoria una serie de items, que se mostrara en un mini menu de recoleccion: 
+"1) [ARMA] Daga de Eco - Ataque: 6 - Durabilidad: 8 
+ 2)[ARMADURA] Casco de Alas Defensa: 2 - Durabilidad: 5
+ 3)[ARMADURA] Pechera de Cuero Viejo Defensa: 2 - Durabilidad: 4
+ 4)TOMAR TODO
+ 5)CANCELAR"
+
+Opción seleccionada: 1) [ARMA] Daga de Eco - Ataque: 6 - Durabilidad: 8 
+
+Arma actual: Sin arma (Ataque: 0, Durabilidad: 0)
+Nueva arma:  Daga de Eco (Ataque: 6, Durabilidad: 8)
+Deseas reemplazar tu arma actual? (1 = SI, 0 = NO):
+
+Opción seleccionada: 1 = SI
+
+Luego se equipara esta arma en tu inventario y podras recoger mas o decidir salir al menu exploración
+
+# Paso 8: Ver estado
+
+Despues de la batalla deseas ver en que estado quedo tu personajes.
+
+Opción seleccionada: 2) VER ESTADO DEL JUGADOR
+
+Jugador: edu | Vida: 98 | Estamina: 18 | Ataque: 6 | Defensa: 15 | Nivel: 0
+Te encuentras en: Entrada al Abismo
+
+[POCIONES]:
+1) Pocion de Vida | Efecto: Vida | Valor: 20
+
+Vuelves al menu de exploracion y seleccionas tu proxima opcion.
+
+# Paso 9: Cambiar de escenario
+
+Una vez superada la primera batalla se decide cambiar de escenario en el menu de exploracion.
+
+Opción seleccionada: 1) EXPLORAR ZONAS
+
+Cuando se cambia de escenario, se llama a batalla inmediatamente y luego si esa batalla sale satisfactoria se indica el nombre del nuevo escenario y su leyenda: "Te has movido a: Pasillo de los Susurros
+
+# Paso 10: Creditos
+
+Luego de cierto tiempo jugando puedes decidir salir del juego desde el menu de exploracion.
+
+Opción seleccionada: 4) SALIR AL MENU PRINCIPAL
+
+Luego querer ver los creditos, antes de terminar tu experiencia
+
+Opción seleccionada: 3) CREDITOS
+
+se muestra: 
+"Falta Creatividad Studios Presenta: 
+Falta XP
+
+Director: Eduardo Sandoval
+Productor: Joaquin Contreras
+Gestor de Calidad: Brandon Caceres
+Responsable de Integracion: Josue Huaiquil
+Coordinador: Eduardo Sandoval 
+Creacion de Enemigos: Brandon Caceres
+Interface Designer: Josue Huaiquil
+
+Equipo de Programacion:
+Eduardo Sandoval
+Joaquin Contreras
+Brandon Caceres
+Josue Huaiquil
+
+Gracias por jugar Falta XP!"
+
+Luego puedes volver al menu principal
+
+# Paso 11: Salir del juego
+
+Cuando ya deseas acabar la expiercia total, simplemente seleccionas salir del manu del menu principal y se acaba la ejecucion del programa.
+
+Opción seleccionada: 4) SALIR
+
+Se acaba la ejecucion del programa
+
 # Contribuciones 
 
 ### Joaquin Contreras:
