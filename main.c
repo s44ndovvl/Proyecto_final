@@ -9,8 +9,13 @@
 #define NORMAL 0
 #define ESPECIAL 1
 
+/**********************************************/
+/*                 Estructuras                */
+/**********************************************/
+
 typedef struct Escenarios Escenarios;
 
+// Estructura para las armaduras
 typedef struct{
     char tipo[50];
     char nombre[50];
@@ -20,19 +25,21 @@ typedef struct{
     int valor;
 }Armadura;
 
+// Estructura para las armas
 typedef struct{
     char nombre[50];
     int ataque;
     int durabilidad;
 }Arma;
 
-//Estructura para cada Item
+//  Estructura para cada Item
 typedef struct{
     char nombre[50];
     char efecto[50];
     int valor;
 }Pocion;
 
+// Estructura para cada Item
 typedef struct{
     Arma armas;
     Armadura casco;
@@ -43,7 +50,7 @@ typedef struct{
     List *pocion;
 }Inventario;
 
-//Estructura para cada escenario(nivel)
+// Estructura para cada escenario (nivel)
 struct Escenarios{
     char id[4];
     char nombre[50];
@@ -60,20 +67,21 @@ struct Escenarios{
     char dificultad[8];
 };
 
-//Estructura para el jugador
+// Estructura para el jugador
 typedef struct{
     char nombre[50];
-    int vida;
-    int max_vida;
-    int vida_total;
 
-    int estamina;
-    int max_estamina;
-    int estamina_total;
+    int vida;           /**********************************************/
+    int max_vida;       /*                    VIDA                    */
+    int vida_total;     /**********************************************/
 
-    int defensa;
-    int max_defensa;
-    int defensa_total;
+    int estamina;       /**********************************************/
+    int max_estamina;   /*                  ESTAMINA                  */
+    int estamina_total; /**********************************************/
+
+    int defensa;        /**********************************************/
+    int max_defensa;    /*                   DEFENSA                  */
+    int defensa_total;  /**********************************************/
 
     int ataque;
     int ataque_total;
@@ -87,6 +95,7 @@ typedef struct{
     bool ReydemonioDerrotado;
 }Jugador;
 
+// Estructura para los enemigos
 typedef struct{
     char nombre[50];
     char dificultad[50];
@@ -97,6 +106,7 @@ typedef struct{
     Inventario item;
 }Enemigo;
 
+// Estructura para los items
 typedef struct {
     int tipo; // 0 = arma, 1 = armadura, 2 = pocion
     void *ptr;
@@ -145,18 +155,24 @@ void verEstado(Jugador * );
 void victoria();
 void liberarMemoria(Jugador *,HashMap *,HashMap *,List *,List *,List *);
 
+/**********************************************/
+/*       Declaracion variables globales       */
+/**********************************************/
+
 static Jugador *g_player   = NULL;
 static HashMap *g_juego    = NULL;
 static HashMap *g_mobs     = NULL;
 static List *g_facil       = NULL;
 static List *g_medio       = NULL;
 static List *g_dificil     = NULL;
+//static List *g_boss        = NULL;
 
 /**********************************************/
 /*                    Main                    */
 /**********************************************/
 
 int main(){
+    // Se inicializan los mapas de juego y enemigos 
     g_juego   = createMap(100);
     g_mobs    = createMap(100);
     if (!g_juego) {
@@ -165,6 +181,7 @@ int main(){
     }
     srand(time(NULL));
 
+    // Se leen los CSV de los escenarios y mobs, y se asignan los enemigos en el mapa
     leer_escenarios(g_juego);
     leer_mobs(g_mobs);
     asignar_mobs(g_juego, g_mobs);
@@ -177,26 +194,37 @@ int main(){
         scanf(" %c", &op);
         
         switch (op) {
-        case '1':
+        case '1': // OPCION 1: INICIAR NUEVA PARTIDA
+            // Se lee el nombre del jugador
             printf("INDIQUE EL NOMBRE DEL NUEVO JUGADOR: ");
             scanf(" %49s", name);
             getchar();
+
+            // Se crea el jugador
             g_player = createPlayer(name, g_juego);
+
+            // Si se creas correctamente el jugador se avanza almenu de juego, en caso contrario
+            // se muestra un mensaje de error
             if (g_player) seleccionOpcion(g_player);
             else puts("No se pudo crear el jugador. Revise los datos de escenarios.");
             break;
-        case '2':
-            seleccionOpcionAyuda();
+        case '2': // OPCION 2: AYUDA
+            seleccionOpcionAyuda(); // Se abre el menu de ayuda 
             break;
-        case '3':
-            mostrarCreditos();
+        case '3': // OPCION 3: CREDITOS
+            mostrarCreditos(); // Se muestran los creditos del juego
             break;
-        case '4':
+        case '4': // OPCION 4: SALIR
+            // Se muestra un mensaje de salida y se libera la memoria utiizada
+            limpiarPantalla();
+            puts("========================================");
+            puts("               FALTA XP                 ");
+            puts("========================================");
             puts("SALIENDO DEL JUEGO");
             if (g_player != NULL) liberarMemoria(g_player, g_juego, g_mobs, g_facil, g_medio, g_dificil);
             break;
-        default:
-            puts("OPCION NO VALIDA");
+        default: // OPCIONES NO VALIDAS
+            puts("OPCION NO VALIDA"); // Mensaje en caso de seleccionar una opcion no valida
             break;
         }
         presioneTeclaParaContinuar();
@@ -212,6 +240,8 @@ int main(){
 void mostrarCreditos()
 {
     limpiarPantalla();
+
+    // Se guardan todos los textos a mostrar en los creditos
     const char* creditos[] = {
         "Falta Creatividad Studios Presenta:",
         "Falta XP",
@@ -231,8 +261,10 @@ void mostrarCreditos()
         "Gracias por jugar Falta XP!"
     };
 
+    // Se calcula la cntidad de elementos en el arreglo de textos 
     int cantidad = sizeof(creditos) / sizeof(creditos[0]);
 
+    // Se muestra por pantalla cada texto cada 1 segundo
     for (int i = 0; i < cantidad; i++) {
         printf("%s\n", creditos[i]);
         esperar(1);         // Espera 1 segundos
@@ -243,6 +275,7 @@ void mostrarCreditos()
 /*               Mostrar menus                */
 /**********************************************/
 
+// Menu de ayuda    
 void mostrarMenuAyuda() {
     limpiarPantalla();
     puts("========================================");
@@ -255,6 +288,7 @@ void mostrarMenuAyuda() {
     puts("4) VOLVER AL MENU PRINCIPAL");
 }
 
+// Menu principal
 void mostrarMenuPrincipal() {
     limpiarPantalla();
     puts("========================================");
@@ -267,6 +301,7 @@ void mostrarMenuPrincipal() {
     puts("4) SALIR");
 }
 
+// Menu del juego
 void mostrarMenuJuego(){
     limpiarPantalla();
     puts("========================================");
@@ -280,6 +315,7 @@ void mostrarMenuJuego(){
     puts("4) SALIR AL MENU PRINCIPAL");
 }
 
+// Menu de pelea
 void menuOpcionesPelea()
 {
     puts("========================================");
@@ -296,8 +332,12 @@ void menuOpcionesPelea()
 /*                  Leer CSVs                 */
 /**********************************************/
 
+// Funcion para leer el CSV de escenarios
 void leer_escenarios(HashMap * juego){
+    // Se abre el archivo mapa.csv
     FILE *archivo = fopen("data/mapa.csv", "r");
+
+    // En caso de que el archivo sea NULL se muestra un mensaje de error
     if (archivo == NULL){
         perror("Error al abrir el archivo");
         return;
@@ -307,14 +347,14 @@ void leer_escenarios(HashMap * juego){
     campos = leer_linea_csv(archivo, ',');
 
     while ((campos = leer_linea_csv(archivo, ',')) != NULL){
+        // Se reserva memoria para cada escenario
         Escenarios * escenario = (Escenarios*)malloc(sizeof(Escenarios));
+
         //Inicializa los punteros de direccion a NULL para evitar punteros basura
         escenario->arriba = NULL;
         escenario->abajo = NULL;
         escenario->izquierda = NULL;
         escenario->derecha = NULL;
-
-
         
         //Copia los datos del CSV a la estructura del escenario
         strncpy(escenario->id, campos[0], sizeof(escenario->id));
@@ -328,12 +368,12 @@ void leer_escenarios(HashMap * juego){
 
         strncpy(escenario->dificultad, campos[7], sizeof(escenario->dificultad));
 
+        // Se inserta el escenario en el mapa de juego
         insertMap(juego, escenario->id, escenario);
-
     }
-    fclose(archivo);
+    fclose(archivo); // Se cierra el archivo
 
-    // Segunda pasada: establecer los punteros de dirección entre escenarios
+    // Segunda pasada: Establecer los punteros de dirección entre escenarios
     List * claves = list_create();
     Pair * par = firstMap(juego);
     while (par != NULL) {
@@ -366,18 +406,23 @@ void leer_escenarios(HashMap * juego){
         }
     }
 
+    // Se limpia la lista de claves y se libera la memoria
     list_clean(claves);
     free(claves);
 }
 
+// Funcion para leer el CSV mobs
 void leer_mobs(HashMap *mobs) {
-
+    // Se crean las listas para las distintas dificultades
     List * facil = list_create();
     List * media = list_create();
     List * dificil = list_create();
+    //List * boss = list_create();
 
-
+    // Se abre el archivo enemigos.csv
     FILE *archivo = fopen("data/enemigos.csv", "r");
+
+    // En caso que el archivo sea NULL se muestra un mensaje de error   
     if (!archivo) {
         perror("Error al abrir data/enemigos.csv");
         return;
@@ -402,7 +447,7 @@ void leer_mobs(HashMap *mobs) {
 
         // Inicializar inventario
         // ----------------------------------------------------------------
-        //  Arma
+        // Arma
         char *tmp = strdup(campos[6]);
         char *tok = strtok(tmp, ",");
         strncpy(e->item.armas.nombre, tok, sizeof(e->item.armas.nombre)-1);
@@ -410,7 +455,7 @@ void leer_mobs(HashMap *mobs) {
         tok = strtok(NULL, ","); e->item.armas.durabilidad = atoi(tok);
         free(tmp);
 
-        //  Armaduras (casco, guantes, pechera, pantalones, botas)
+        // Armaduras (casco, guantes, pechera, pantalones, botas)
         const int idx[5] = {7,8,9,10,11};
         Armadura *pieces[5] = {
             &e->item.casco,
@@ -423,7 +468,7 @@ void leer_mobs(HashMap *mobs) {
             char *tmp = strdup(campos[idx[i]]);
             char *tok = strtok(tmp, ",");
 
-            // separar tipo y nombre
+            // Separar tipo y nombre
             char *sp = strchr(tok, ' ');
             if (sp) {
                 *sp = '\0';
@@ -433,16 +478,17 @@ void leer_mobs(HashMap *mobs) {
                 strncpy(pieces[i]->tipo, tok,        sizeof(pieces[i]->tipo)-1);
             }
 
-            // leer el resto de campos
+            // Leer el resto de campos
             tok = strtok(NULL, ","); pieces[i]->defensa    = atoi(tok);
             tok = strtok(NULL, ","); pieces[i]->durabilidad = atoi(tok);
             tok = strtok(NULL, ",");
             tok = strtok(NULL, ","); pieces[i]->valor      = atoi(tok);
 
+            // Se libera memoria
             free(tmp);
         }
 
-        //  Poción
+        // Poción
         e->item.pocion = list_create();
         {
             char *tmp = strdup(campos[12]);
@@ -457,26 +503,32 @@ void leer_mobs(HashMap *mobs) {
             p->valor = atoi(tok);
 
             list_pushBack(e->item.pocion, p);
+
+            // Se libera memoria
             free(tmp);
         }
         // ----------------------------------------------------------------
 
+        // Se agrega el mob a la lista de enemigos, segun su dificultad
         if (strcmp(e->dificultad, "Facil") == 0) list_pushBack(facil, e);
         if (strcmp(e->dificultad, "Media") == 0) list_pushBack(media, e);
         if (strcmp(e->dificultad, "Dificil") == 0) list_pushBack(dificil, e);
-        if (strcmp(e->dificultad, "Boss") == 0) insertMap(mobs, "Boss", e);
-        // Insertar en el HashMap
-        
+        if (strcmp(e->dificultad, "Boss") == 0) insertMap(mobs, "Boss", e); //list_pushBack(boss, e);
     }
 
+    // Se actualizan las variables globales asignandoles las listas de mobs
     g_facil = facil;
     g_medio = media;
     g_dificil = dificil;
+    //g_boss = boss;
 
+    // Se insertan las listas de mobs en el mapa
     insertMap(mobs, "facil", facil);
     insertMap(mobs, "media", media);
     insertMap(mobs, "dificil", dificil);
+    //insertMao(mobs, "Boss", boss);
 
+    // Se cierra el archivo
     fclose(archivo);
 }
 
@@ -484,12 +536,14 @@ void leer_mobs(HashMap *mobs) {
 /*          Asignar mobs a escenarios         */
 /**********************************************/
 
+// Funcion para asignar enemigos al mapa
 void asignar_mobs(HashMap * escenarios, HashMap * mobs){
     for (Pair * esc = firstMap(escenarios); esc != NULL; esc = nextMap(escenarios)){
         Escenarios * escenario = esc->value;
 
         escenario->Enemigos = list_create();
 
+        // Se asignan mobs al escenario segun la dificultad que tenga asignado este
         if (strcmp(escenario->dificultad, "Facil") == 0) escenario->Enemigos = searchMap(mobs, "facil")->value;
         if (strcmp(escenario->dificultad, "Media") == 0) escenario->Enemigos = searchMap(mobs, "media")->value;
         if (strcmp(escenario->dificultad, "Dificil") == 0) escenario->Enemigos = searchMap(mobs, "dificil")->value;
@@ -497,6 +551,7 @@ void asignar_mobs(HashMap * escenarios, HashMap * mobs){
     }
 }
 
+// Funcion para copiar la armadura
 void copiaArmadura(Armadura * seleccionado, Armadura * item){
     strcpy(seleccionado->tipo, item->tipo);
     strcpy(seleccionado->nombre, item->nombre);
@@ -506,6 +561,7 @@ void copiaArmadura(Armadura * seleccionado, Armadura * item){
     seleccionado->valor = item->valor;
 }
 
+// Funcion para seleccionar 
 Enemigo * seleccionarEnemigo(List * enemigos){
     if(enemigos == NULL){
         return NULL;
