@@ -165,7 +165,7 @@ static HashMap *g_mobs     = NULL;
 static List *g_facil       = NULL;
 static List *g_medio       = NULL;
 static List *g_dificil     = NULL;
-//static List *g_boss        = NULL;
+static List *g_boss        = NULL;
 
 /**********************************************/
 /*                    Main                    */
@@ -417,7 +417,7 @@ void leer_mobs(HashMap *mobs) {
     List * facil = list_create();
     List * media = list_create();
     List * dificil = list_create();
-    //List * boss = list_create();
+    List * boss = list_create();
 
     // Se abre el archivo enemigos.csv
     FILE *archivo = fopen("data/enemigos.csv", "r");
@@ -513,20 +513,20 @@ void leer_mobs(HashMap *mobs) {
         if (strcmp(e->dificultad, "Facil") == 0) list_pushBack(facil, e);
         if (strcmp(e->dificultad, "Media") == 0) list_pushBack(media, e);
         if (strcmp(e->dificultad, "Dificil") == 0) list_pushBack(dificil, e);
-        if (strcmp(e->dificultad, "Boss") == 0) insertMap(mobs, "Boss", e); //list_pushBack(boss, e);
+        if (strcmp(e->dificultad, "Boss") == 0) list_pushBack(boss, e);
     }
 
     // Se actualizan las variables globales asignandoles las listas de mobs
     g_facil = facil;
     g_medio = media;
     g_dificil = dificil;
-    //g_boss = boss;
+    g_boss = boss;
 
     // Se insertan las listas de mobs en el mapa
     insertMap(mobs, "facil", facil);
     insertMap(mobs, "media", media);
     insertMap(mobs, "dificil", dificil);
-    //insertMao(mobs, "Boss", boss);
+    insertMap(mobs, "Boss", boss);
 
     // Se cierra el archivo
     fclose(archivo);
@@ -916,7 +916,7 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
 
         if (opcion == index + 1 || opcion <= 0) {
             puts("CANCELANDO O OPCION INVALIDA");
-            //presioneTeclaParaContinuar();
+            presioneTeclaParaContinuar();
             break;
         }
 
@@ -927,7 +927,6 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
                 free(elemento);
             }
             puts("HAS RECOGIDO TODOS LOS OBJETOS");
-            //presioneTeclaParaContinuar();
             break;
         } else {
             int actual = 1;
@@ -953,7 +952,6 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
                 items_posibles = nueva;    // Usa la nueva lista
 
                 puts("Objeto recogido con exito.");
-                //presioneTeclaParaContinuar();
             }
         }
     }
@@ -1084,16 +1082,25 @@ bool realizarAtaque(Jugador *player, Enemigo *enemigo, bool especial) {
 
     int dano = multiplicador * ((player->ataque_total * player->ataque_total) / (player->ataque_total + enemigo->defensa));
     enemigo->vida -= dano;
-    player->inventario.armas.durabilidad -= 1;
+    
     player->estamina += costo_estamina;
 
-    if (player->inventario.armas.durabilidad == 0) {
-        printf("Tu %s se ha roto", player->inventario.armas.nombre);
-        reiniciarArma(&player->inventario.armas);
+    if (strcmp(player->inventario.armas.nombre, "Sin arma") != 0){
+        player->inventario.armas.durabilidad -= 1;
+        if (player->inventario.armas.durabilidad == 0) {
+            printf("Tu %s se ha rot\n", player->inventario.armas.nombre);
+            reiniciarArma(&player->inventario.armas);
+            presioneTeclaParaContinuar();
+        }
     }
     if (enemigo->vida <= 0) {
         puts("El enemigo ha sido derrotado!");
         player->experiencia+= enemigo->exp_dada;
+
+        while(player->experiencia >= 100){
+            player->experiencia -= 100;
+            lvlup(player);
+        }
 
         if(strcmp(enemigo->nombre, "Creeper") == 0)
         {
@@ -1111,7 +1118,8 @@ bool realizarAtaque(Jugador *player, Enemigo *enemigo, bool especial) {
 }
 
 void reiniciarArmadura(Armadura * vacia){
-    printf("Tu %s se ha roto", vacia->nombre);
+    printf("Tu %s %s se ha roto\n", vacia->tipo, vacia->nombre);
+    presioneTeclaParaContinuar();
     strcpy(vacia->nombre, "Sin armadura");
     strcpy(vacia->tipo, "");
     vacia->defensa = 0;
@@ -1200,7 +1208,8 @@ bool cicloPelea(Jugador * player, List * enemigos)
             EnemigoVivo = realizarAtaque(player, enemigo, NORMAL);
             break;
         case '2':
-            EnemigoVivo = realizarAtaque(player, enemigo, ESPECIAL);
+            if (player->estamina >= 5) EnemigoVivo = realizarAtaque(player, enemigo, ESPECIAL);
+            else puts("No cuentas con suficiente estamina para hacer un ataque especial\n");
             break;
         case '3':
             repetirAccion = usarPociones(player); // El jugador usa una poción
@@ -1440,6 +1449,9 @@ bool movermeDeEscenario(Jugador *jugador)
         }
 
     } while (!movimiento);
+
+    if (!jugadorVivo) return false;
+
     limpiarPantalla();
     puts("========================================");
     puts("               FALTA XP");
