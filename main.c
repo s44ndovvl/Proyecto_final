@@ -1022,7 +1022,6 @@ bool usarPociones(Jugador * player){
     }
     else if (strcmp(seleccionada->efecto, "Escudo") == 0){
         player->defensa += seleccionada->valor;
-        if (player->defensa > player->max_defensa) player->defensa = player->max_defensa;
         printf("Tu defensa aumento a: %d\n", player->defensa);
     }
     else if (strcmp(seleccionada->efecto, "Estamina") == 0){
@@ -1032,7 +1031,6 @@ bool usarPociones(Jugador * player){
     }
     else if (strcmp(seleccionada->efecto, "Ataque") == 0){
         player->ataque += seleccionada->valor;
-        if (player->ataque > player->max_ataque) player->ataque = player->max_ataque;
         printf("Tu ataque actual es: %d\n", player->ataque);
     }
 
