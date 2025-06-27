@@ -254,7 +254,7 @@ void mostrarCreditos()
         "Productor: Joaquin Contreras",
         "Gestor de Calidad: Brandon Caceres",
         "Responsable de Integracion: Josue Huaiquil",
-        "Coordinador: Eduardo Sandoval"
+        "Coordinador: Eduardo Sandoval",
         "Creacion de Enemigos: Brandon Caceres",
         "Interface Designer: Josue Huaiquil", "",
         "Equipo de Programacion:",
