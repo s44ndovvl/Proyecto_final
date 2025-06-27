@@ -192,13 +192,14 @@ int main(){
         mostrarMenuPrincipal();
         printf("INGRESE SU OPCION: ");
         scanf(" %c", &op);
-        
+        while (getchar() != '\n');
+
         switch (op) {
         case '1': // OPCION 1: INICIAR NUEVA PARTIDA
             // Se lee el nombre del jugador
             printf("INDIQUE EL NOMBRE DEL NUEVO JUGADOR: ");
             scanf(" %49s", name);
-            getchar();
+            while (getchar() != '\n');
 
             // Se crea el jugador
             g_player = createPlayer(name, g_juego);
@@ -279,7 +280,7 @@ void mostrarCreditos()
 void mostrarMenuAyuda() {
     limpiarPantalla();
     puts("========================================");
-    puts("              MENU DE AYUDA                  ");
+    puts("              MENU DE AYUDA             ");
     puts("========================================");
   
     puts("1) SOBRE LOS MOVIMIENTOS");
@@ -769,6 +770,7 @@ void guardar_item(Inventario * inv, void * item, int tipo){
             printf("Deseas reemplazar tu arma actual? (1 = SI, 0 = NO): ");
             int decision;
             scanf("%d", &decision);
+            while (getchar() != '\n');
             if (decision == 1) {
                 inv->armas = *arma;
                 printf("Has reemplazado tu arma con exito.\n");
@@ -796,6 +798,7 @@ void guardar_item(Inventario * inv, void * item, int tipo){
             printf("Deseas reemplazar esta armadura? (1 = SI, 0 = NO): ");
             int decision;
             scanf("%d", &decision);
+            while (getchar() != '\n');
             if (decision == 1) {
                 *actual = *armadura;
                 printf("Has reemplazado la armadura con exito.\n");
@@ -912,7 +915,8 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
         printf("\nSELECCIONE UNA OPCION: ");
         
         int opcion;
-        scanf("%d", &opcion);
+        scanf("%1d", &opcion);
+        while (getchar() != '\n');
 
         if (opcion == index + 1 || opcion <= 0) {
             puts("CANCELANDO O OPCION INVALIDA");
@@ -979,6 +983,7 @@ bool usarPociones(Jugador * player){
     printf("Seleccione la opcion a usar: ");
     int opcion;
     scanf("%d", &opcion);
+    while (getchar() != '\n');
 
     if (opcion <= 0 || opcion > list_size(player->inventario.pocion)) {
         puts("No se uso ninguna pocion.");
@@ -1193,6 +1198,7 @@ bool cicloPelea(Jugador * player, List * enemigos)
         char opcion;
         printf("INGRESE SU OPCION: ");
         scanf(" %c", &opcion);
+        while (getchar() != '\n');
 
         switch (opcion)
         {
@@ -1238,6 +1244,7 @@ void seleccionOpcion(Jugador * player)
         mostrarMenuJuego();
         printf("INGRESE SU OPCION: ");
         scanf(" %c", &op);
+        while (getchar() != '\n');
 
         //Se realizan las acciones según la opción seleccionada
         switch (op) {
@@ -1272,6 +1279,7 @@ void seleccionOpcionAyuda()
         mostrarMenuAyuda();
         printf("INGRESE SU OPCION: ");
         scanf(" %c", &op);
+        while (getchar() != '\n');
 
         //Se realizan las acciones según la opción seleccionada
         switch (op) {
@@ -1388,6 +1396,7 @@ bool movermeDeEscenario(Jugador *jugador)
         printf("\nSolo se muestran las direcciones disponibles.\n");
         printf("Ingrese direccion (w/a/s/d): ");
         scanf(" %c", &direccion);
+        while (getchar() != '\n');
 
         switch (direccion) {
             case 'w':
