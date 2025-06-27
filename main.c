@@ -6,6 +6,8 @@
 #include "list.h"
 #include "extra.h"
 #include "hashmap.h"
+#define NORMAL 0
+#define ESPECIAL 1
 
 typedef struct Escenarios Escenarios;
 
@@ -122,7 +124,7 @@ bool usarPociones(Jugador * );
 void aplicarBufo(Jugador * , const char *, int );
 void calcularEstatsT(Jugador * );
 void reiniciarArma(Arma * );
-bool ataque(Jugador * , Enemigo * );
+bool realizarAtaque(Jugador * , Enemigo * , bool );
 void reiniciarArmadura(Armadura * );
 void ataqueEnemigo(Jugador * , Enemigo * );
 
@@ -287,8 +289,9 @@ void menuOpcionesPelea()
     puts("              MENU DE PELEA                   ");
     puts("========================================");
     puts("1) ATACAR AL ENEMIGO");
-    puts("2) USAR POCION");
-    puts("3) HUIR DE LA PELEA");
+    puts("2) ATAQUE ESPECIAL");
+    puts("3) USAR POCION");
+    puts("4) HUIR DE LA PELEA");
     puts("=========================================");
 }
 
@@ -919,7 +922,7 @@ bool usarPociones(Jugador * player){
         seleccionada = (Pocion *)list_next(player->inventario.pocion);
     }
     if (!seleccionada) {
-        puts("Error al seleccionar la poción.");
+        puts("Error al seleccionar la pocion.");
         presioneTeclaParaContinuar();
         return false;
     }
@@ -937,7 +940,7 @@ bool usarPociones(Jugador * player){
     else if (strcmp(seleccionada->efecto, "Escudo") == 0){
         player->defensa += seleccionada->valor;
         if (player->defensa > player->max_defensa) player->defensa = player->max_defensa;
-        printf("Tu defensa aumentó a: %d\n", player->defensa);
+        printf("Tu defensa aumento a: %d\n", player->defensa);
     }
     else if (strcmp(seleccionada->efecto, "Estamina") == 0){
         player->estamina += seleccionada->valor;
@@ -1005,16 +1008,22 @@ void reiniciarArma(Arma * arma){
     arma->durabilidad = 0;
 }
 
-bool ataque(Jugador * player, Enemigo * enemigo){
-    enemigo->vida -= ((player->ataque_total * player->ataque_total) / (player->ataque_total + enemigo->defensa)); // El enemigo recibe daño del jugador
-    player->inventario.armas.durabilidad -=1;
-    if (player->inventario.armas.durabilidad == 0){
+bool realizarAtaque(Jugador *player, Enemigo *enemigo, bool especial) {
+    int multiplicador = especial ? 2 : 1;
+    int costo_estamina = especial ? -5 : 1; // -5 para restar 5 en especial, 1 para sumar 1 en normal
+
+    int dano = multiplicador * ((player->ataque_total * player->ataque_total) / (player->ataque_total + enemigo->defensa));
+    enemigo->vida -= dano;
+    player->inventario.armas.durabilidad -= 1;
+    player->estamina += costo_estamina;
+
+    if (player->inventario.armas.durabilidad == 0) {
         printf("Tu %s se ha roto", player->inventario.armas.nombre);
         reiniciarArma(&player->inventario.armas);
     }
-    if (enemigo->vida <= 0){
+    if (enemigo->vida <= 0) {
         puts("El enemigo ha sido derrotado!");
-        player->experiencia+= enemigo->exp_dada;
+        player->experiencia += enemigo->exp_dada;
         recoger_items_enemigo(player, enemigo);
         return false;
     }
@@ -1041,7 +1050,7 @@ void perdidaDurabilidad(Armadura * aux){
 void ataqueEnemigo(Jugador * player, Enemigo * enemigo){
     
     if(player->inmunidad) {
-        puts("¡El enemigo no puede dañarte, estás inmune!");
+        puts("¡El enemigo no puede dañarte, estas inmune!");
         (player->inmunidad)--; // Desactiva la inmunidad después de un ataque
         return;
     }
@@ -1082,7 +1091,7 @@ bool cicloPelea(Jugador * player, List * enemigos)
 
     //calcularDefensaActual(player);
     if (enemigo == NULL) {
-        printf("No se encontró ningún enemigo para pelear en esta zona.\n");
+        printf("No se encontro ningun enemigo para pelear en esta zona.\n");
         presioneTeclaParaContinuar(); // Pausa para que el usuario lea el mensaje
         return true; // El jugador sigue vivo, pero no hubo pelea.
     }
@@ -1108,16 +1117,19 @@ bool cicloPelea(Jugador * player, List * enemigos)
         switch (opcion)
         {
         case '1':
-            EnemigoVivo = ataque(player, enemigo);
+            EnemigoVivo = realizarAtaque(player, enemigo, NORMAL);
             break;
         case '2':
-            repetirAccion = usarPociones(player); // El jugador usa una poción
+            EnemigoVivo = realizarAtaque(player, enemigo, ESPECIAL);
             break;
         case '3':
+            repetirAccion = usarPociones(player); // El jugador usa una poción
+            break;
+        case '4':
             if(huida(player, enemigo)) return true;
             break;
         default:
-            puts("Opción no válida, por favor intente de nuevo.");
+            puts("Opcion no valida, por favor intente de nuevo.");
             repetirAccion = true; // Repite la acción si la opción no es válida
             break;
         }
@@ -1367,10 +1379,11 @@ void verEstado(Jugador *player)
             player->nivel);
     printf("Te encuentras en: %s\n", player->actual->nombre);
     if(strcmp(player->inventario.armas.nombre, "Sin arma") == 1) printf("[ARMA]: %s\n", player->inventario.armas.nombre);
-    if(strcmp(player->inventario.casco.nombre, "Sin armadura") == 1) printf("[CASCO]: %s\n", player->inventario.casco.nombre);
-    if(strcmp(player->inventario.pechera.nombre, "Sin armadura") == 1) printf("[PECHERA]: %s\n", player->inventario.pechera.nombre);
-    if(strcmp(player->inventario.guantes.nombre, "Sin armadura") == 1) printf("[GUANTES]: %s\n", player->inventario.guantes.nombre);
-    if(strcmp(player->inventario.pantalones.nombre, "Sin armadura") == 1) printf("[PANTALON]: %s\n\n", player->inventario.pantalones.nombre);
+    if(strcmp(player->inventario.casco.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Casco %s\n", player->inventario.casco.nombre);
+    if(strcmp(player->inventario.pechera.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Pechera %s\n", player->inventario.pechera.nombre);
+    if(strcmp(player->inventario.guantes.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Guantes %s\n", player->inventario.guantes.nombre);
+    if(strcmp(player->inventario.pantalones.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Pantalon %s\n\n", player->inventario.pantalones.nombre);
+    if(strcmp(player->inventario.botas.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Botas %s\n\n", player->inventario.botas.nombre);
     if(list_first(player->inventario.pocion) != NULL)
     {
         printf("[POCIONES]:\n");
