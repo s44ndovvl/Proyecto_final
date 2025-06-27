@@ -110,8 +110,8 @@ void mostrarMenuJuego();
 void menuOpcionesPelea();
 
 void leer_escenarios(HashMap * );
-void leer_mobs(HashMap * , List * , List * , List * );
-void asignar_mobs(HashMap * , HashMap * , List * , List * , List * );
+void leer_mobs(HashMap * );
+void asignar_mobs(HashMap * , HashMap * );
 Enemigo * seleccionarEnemigo(List * );
 Jugador * createPlayer(char * , HashMap * );
 
@@ -147,9 +147,7 @@ void verEstado(Jugador * );
 int main(){
     HashMap *juego = createMap(100); // Crea un HashMap para almacenar los escenarios
     HashMap *mobs = createMap(100); // Crea un HashMap para almacenar los monstruos
-    List * facil = list_create();
-    List * medio = list_create();
-    List * dificil = list_create();
+
     Jugador * player = NULL;
     if (juego == NULL) {
         fprintf(stderr, "Error al crear el HashMap\n");
@@ -158,9 +156,9 @@ int main(){
     srand(time(NULL));
     leer_escenarios(juego); // Llama a la funciÃ³n para leer los escenarios desde el archivo CSV
     //mostrarMap(juego);
-    leer_mobs(mobs, facil, medio, dificil); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
+    leer_mobs(mobs); // Llama a la funciÃ³n para leer los monstruos desde el archivo CSV
     //mostrar_mobs(mobs); // Muestra el contenido del HashMap
-    asignar_mobs(juego, mobs, facil, medio, dificil);
+    asignar_mobs(juego, mobs);
 
     char op;
     char name[50];
@@ -313,6 +311,8 @@ void leer_escenarios(HashMap * juego){
         escenario->abajo = NULL;
         escenario->izquierda = NULL;
         escenario->derecha = NULL;
+
+
         
         //Copia los datos del CSV a la estructura del escenario
         strncpy(escenario->id, campos[0], sizeof(escenario->id));
@@ -368,7 +368,13 @@ void leer_escenarios(HashMap * juego){
     free(claves);
 }
 
-void leer_mobs(HashMap *mobs, List * facil, List * media, List * dificil) {
+void leer_mobs(HashMap *mobs) {
+
+    List * facil = list_create();
+    List * media = list_create();
+    List * dificil = list_create();
+
+
     FILE *archivo = fopen("data/enemigos.csv", "r");
     if (!archivo) {
         perror("Error al abrir data/enemigos.csv");
@@ -456,10 +462,13 @@ void leer_mobs(HashMap *mobs, List * facil, List * media, List * dificil) {
         if (strcmp(e->dificultad, "Facil") == 0) list_pushBack(facil, e);
         if (strcmp(e->dificultad, "Media") == 0) list_pushBack(media, e);
         if (strcmp(e->dificultad, "Dificil") == 0) list_pushBack(dificil, e);
-
+        if (strcmp(e->dificultad, "Boss") == 0) insertMap(mobs, "Boss", e);
         // Insertar en el HashMap
-        insertMap(mobs, e->nombre, e);
+        
     }
+    insertMap(mobs, "facil", facil);
+    insertMap(mobs, "media", media);
+    insertMap(mobs, "dificil", dificil);
 
     fclose(archivo);
 }
@@ -468,15 +477,16 @@ void leer_mobs(HashMap *mobs, List * facil, List * media, List * dificil) {
 /*          Asignar mobs a escenarios         */
 /**********************************************/
 
-void asignar_mobs(HashMap * escenarios, HashMap * mobs, List * facil, List * media, List * dificil){
+void asignar_mobs(HashMap * escenarios, HashMap * mobs){
     for (Pair * esc = firstMap(escenarios); esc != NULL; esc = nextMap(escenarios)){
         Escenarios * escenario = esc->value;
 
         escenario->Enemigos = list_create();
 
-        if (strcmp(escenario->dificultad, "Facil") == 0) escenario->Enemigos = facil;
-        if (strcmp(escenario->dificultad, "Media") == 0) escenario->Enemigos = media;
-        if (strcmp(escenario->dificultad, "Dificil") == 0) escenario->Enemigos = dificil;
+        if (strcmp(escenario->dificultad, "Facil") == 0) escenario->Enemigos = searchMap(mobs, "facil")->value;
+        if (strcmp(escenario->dificultad, "Media") == 0) escenario->Enemigos = searchMap(mobs, "media")->value;
+        if (strcmp(escenario->dificultad, "Dificil") == 0) escenario->Enemigos = searchMap(mobs, "dificil")->value;
+        if (strcmp(escenario->dificultad, "Boss") == 0) escenario->Enemigos = searchMap(mobs, "Boss")->value;
     }
 }
 
@@ -1015,6 +1025,13 @@ bool ataque(Jugador * player, Enemigo * enemigo){
     if (enemigo->vida <= 0){
         puts("El enemigo ha sido derrotado!");
         player->experiencia+= enemigo->exp_dada;
+
+        if(strcmp(enemigo->nombre, "Creeper") == 0)
+        {
+            player->vida -= 10;
+            printf("El %s ha explotado!!. te ha quitado 10 de vida :(\n", enemigo->nombre);
+            presioneTeclaParaContinuar();
+        } 
         recoger_items_enemigo(player, enemigo);
         return false;
     }
@@ -1095,8 +1112,8 @@ bool cicloPelea(Jugador * player, List * enemigos)
         
         printf("Jugador: %s | Vida: %d | Estamina: %d | Ataque: %d | Defensa: %d\n",
             player->nombre, player->vida, player->estamina, player->ataque_total, player->defensa_total);
-        printf("Enemigo: %s | Vida: %d | Defensa: %d\n",
-            enemigo->nombre, enemigo->vida, enemigo->defensa);
+        printf("Enemigo: %s | Vida: %d | Defensa: %d | Dificultad : %s\n",
+            enemigo->nombre, enemigo->vida, enemigo->defensa, enemigo->dificultad);
         
         menuOpcionesPelea(); // Muestra el menú de opciones de pelea
         bool repetirAccion = false; // Variable para controlar si se repite la acción
