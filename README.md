@@ -117,7 +117,24 @@ Opción seleccionada: 1) INICIAR NUEVA PARTIDA
 
 se inicia una nueva partida y se muestran las opciones del menu de exploracion: "1) EXPLORAR ZONAS 2) VER ESTADO DEL JUGADOR 3) ATACAR A UN ENEMIGO 4) SALIR AL MENU PRINCIPAL"
 
-# paso 3: Cambiar de sala
+# paso 3: Entrar en combate
+
+Se busca aumentar experiencia y recolectar objeto atacando un enemigo.
+
+Opción seleccionada: 3) ATACAR A UN ENEMIGO
+
+aparece un mensaje con las estaditicas del jugador y el enemigo a enfrentarse: "Enemigo: Murcielago Ciego | Vida: 13 | Defensa: 0 | Dificultad : Facil". Luego las opciones de del menu de pelea: 1) ATACAR AL ENEMIGO 2) ATAQUE ESPECIAL 3) USAR POCION 4) HUIR DE LA PELEA.
+
+# Paso 4: Ataque especial / Ataque al enemigo
+
+Para hacerle daño al enemigo puedes elegir entre ataque especial, o el ataque normal. La diferencia entre ambos, es que el ataque especial hace el doble de daño que el ataque normal, pero consume 5 de estamina al jugador, mientras que el ataque normal va recuperando 1 de estamina cada vez que se efectua.
+
+Opción seleccionada: 2) ATAQUE ESPECIAL
+
+El jugador pierde 5 de estamina, y despues del ataque del enemigo pierde cierta cantidad de vida. Se vuelve al menu de pelea
+
+# Paso 5: Usar un consumible
+# Paso :
 # Paso :
 # Paso :
 # Paso :

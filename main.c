@@ -1096,16 +1096,35 @@ void ataqueEnemigo(Jugador * player, Enemigo * enemigo){
 
 bool huida(Jugador *player, Enemigo *enemigo)
 {
-    int margen = (player->estamina + player->vida) / enemigo->vida; // Calcula el margen de éxito para huir
-    
-    int index = rand() % enemigo->vida;
-    
-    if (index < margen) {
+    if(strcmp(enemigo->dificultad, "Boss") == 0) {
+        puts("No puedes huir de un Boss!");
+        return false; // No se puede huir de un Boss
+    }
+    int prob_base = 30;
+
+    // Modificadores según estado del jugador y dificultad del enemigo
+    int mod_estamina = player->estamina - 10; // +1% por cada punto sobre 10
+    int mod_vida = player->vida - enemigo->ataque; // +1% por cada punto de vida sobre el ataque enemigo
+
+    int mod_dificultad = 0;
+    if (strcmp(enemigo->dificultad, "Dificil") == 0) mod_dificultad = -15;
+    else if (strcmp(enemigo->dificultad, "Media") == 0) mod_dificultad = 10;
+    else if (strcmp(enemigo->dificultad, "Facil") == 0) mod_dificultad = -5;
+
+    int prob_final = prob_base + mod_estamina / 2 + mod_vida / 2 + mod_dificultad;
+
+    // Limitar la probabilidad entre 5% y 90%
+    if (prob_final < 0) prob_final = 0;
+    if (prob_final > 100) prob_final = 100;
+
+    int index = rand() % 100;
+    if (index < prob_final) {
         puts("¡Has logrado huir de la pelea!");
         player->estamina -= 5; // El jugador pierde estamina al intentar huir
         if (player->estamina < 0) player->estamina = 0; // Asegura que la estamina no sea negativa
         return true; // El jugador ha huido exitosamente
     }
+    puts("No has logrado huir de la pelea, el enemigo te ataca!");
     return false;
 }
 
