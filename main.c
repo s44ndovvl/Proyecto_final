@@ -83,8 +83,10 @@ typedef struct{
     int max_defensa;    /*                   DEFENSA                  */
     int defensa_total;  /**********************************************/
 
-    int ataque;
-    int ataque_total;
+    int ataque;         /**********************************************/
+    int max_ataque;     /*                   ATAQUE                   */
+    int ataque_total;   /**********************************************/
+
 
     int experiencia;
     int nivel;
@@ -138,6 +140,7 @@ void reiniciarArma(Arma * );
 bool realizarAtaque(Jugador * , Enemigo * , bool );
 void reiniciarArmadura(Armadura * );
 void ataqueEnemigo(Jugador * , Enemigo * );
+void reiniciarEstasBase(Jugador * );
 
 bool huida(Jugador *, Enemigo *);
 void guardar_item(Inventario * , void * , int );
@@ -640,6 +643,7 @@ Jugador * createPlayer(char nombre[], HashMap * juego){
     player->defensa_total = 0;
     player->ataque = 6;
     player->ataque_total = 6;
+    player->max_ataque = 6;
     player->experiencia = 0;
     player->nivel = 0;
     player->actual = inicio->value;
@@ -750,6 +754,12 @@ void mostrarMap(HashMap * juego){
 /**********************************************/
 /*               Ciclo de Pelea               */
 /**********************************************/
+
+void reiniciarEstasBase(Jugador * player){
+    // Reinicia las estadisticas base del jugador
+    player->defensa = player->max_defensa;
+    player->ataque = player->max_ataque;
+}
 
 void guardar_item(Inventario * inv, void * item, int tipo){
     if (!item) return;
@@ -1014,13 +1024,18 @@ bool usarPociones(Jugador * player){
     }
     else if (strcmp(seleccionada->efecto, "Escudo") == 0){
         player->defensa += seleccionada->valor;
-        if (player->defensa > player->max_defensa) player->defensa = player->max_defensa;
+        //if (player->defensa > player->max_defensa) player->defensa = player->max_defensa;
         printf("Tu defensa aumento a: %d\n", player->defensa);
     }
     else if (strcmp(seleccionada->efecto, "Estamina") == 0){
         player->estamina += seleccionada->valor;
         if (player->estamina > player->max_estamina) player->estamina = player->max_estamina;
         printf("Tu estamina actual es: %d\n", player->estamina);
+    }
+    else if (strcmp(seleccionada->efecto, "Ataque") == 0){
+        player->ataque += seleccionada->valor;
+        //if (player->ataque > player->max_ataque) player->ataque = player->max_ataque;
+        printf("Tu ataque actual es: %d\n", player->ataque);
     }
 
     Pocion * pocion_a_liberar = (Pocion *)list_popCurrent(player->inventario.pocion);
@@ -1241,6 +1256,9 @@ bool cicloPelea(Jugador * player, List * enemigos)
         if (repetirAccion) continue; // Si se repite la acción, vuelve al inicio del bucle
         if(EnemigoVivo) ataqueEnemigo(player, enemigo); // El enemigo ataca al jugador
     }
+    
+    reiniciarEstasBase(player);
+    calcularEstatsT(player);
 
     if (player->vida <= 0) {
         puts("El jugador ha sido derrotado!");
@@ -1384,7 +1402,7 @@ void seleccionOpcionAyuda()
 void lvlup(Jugador *jugador) {
     jugador->nivel++;
     jugador->max_vida += 5; // Incrementa la vida al subir de nivel
-    jugador->ataque += 2; // Incrementa el ataque al subir de nivel
+    jugador->max_ataque += 2; // Incrementa el ataque al subir de nivel
     jugador->max_defensa += 1; // Incrementa la defensa al subir de nivel
     printf("¡Felicidades! Has subido al nivel %d.\n", jugador->nivel);
 }
