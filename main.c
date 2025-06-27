@@ -718,8 +718,8 @@ void guardar_item(Inventario * inv, void * item, int tipo){
 
         if (actual) {
             printf("\n[%s]\n", armadura->tipo);
-            printf("Armadura actual: %s (Defensa: %d, Durabilidad: %d)\n", actual->nombre, actual->defensa, actual->durabilidad);
-            printf("Nueva armadura:  %s (Defensa: %d, Durabilidad: %d)\n", armadura->nombre, armadura->defensa, armadura->durabilidad);
+            printf("Armadura actual: %s %s (Defensa: %d, Durabilidad: %d)\n", actual->tipo, actual->nombre, actual->defensa, actual->durabilidad);
+            printf("Nueva armadura:  %s %s (Defensa: %d, Durabilidad: %d)\n", armadura->tipo, armadura->nombre, armadura->defensa, armadura->durabilidad);
             printf("Deseas reemplazar esta armadura? (1 = SI, 0 = NO): ");
             int decision;
             scanf("%d", &decision);
@@ -825,7 +825,7 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
                 printf("%d) [ARMA] %s - Ataque: %d - Durabilidad: %d\n", index, a->nombre, a->ataque, a->durabilidad);
             } else if (item->tipo == 1) {
                 Armadura *arm = (Armadura *)item->ptr;
-                printf("%d) [ARMADURA] %s - Defensa: %d - Durabilidad: %d\n", index, arm->nombre, arm->defensa, arm->durabilidad);
+                printf("%d) [ARMADURA] %s %s - Defensa: %d - Durabilidad: %d\n", index, arm->tipo, arm->nombre, arm->defensa, arm->durabilidad);
             } else if (item->tipo == 2) {
                 Pocion *poc = (Pocion *)item->ptr;
                 printf("%d) [POCION] %s - %s (%d)\n", index, poc->nombre, poc->efecto, poc->valor);
