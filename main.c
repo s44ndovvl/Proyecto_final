@@ -135,7 +135,7 @@ bool cicloPelea(Jugador * , List * );
 void seleccionOpcion(Jugador * );
 void seleccionOpcionAyuda();
 
-void movermeDeEscenario(Jugador * );
+bool movermeDeEscenario(Jugador * );
 void lvlup(Jugador * );
 
 /**********************************************/
@@ -448,9 +448,9 @@ void leer_mobs(HashMap *mobs, List * facil, List * media, List * dificil) {
         }
         // ----------------------------------------------------------------
 
-        if (strcmp(e->dificultad, "Facil")) list_pushBack(facil, e);
-        if (strcmp(e->dificultad, "Media")) list_pushBack(media, e);
-        if (strcmp(e->dificultad, "Dificil")) list_pushBack(dificil, e);
+        if (strcmp(e->dificultad, "Facil") == 0) list_pushBack(facil, e);
+        if (strcmp(e->dificultad, "Media") == 0) list_pushBack(media, e);
+        if (strcmp(e->dificultad, "Dificil") == 0) list_pushBack(dificil, e);
 
         // Insertar en el HashMap
         insertMap(mobs, e->nombre, e);
@@ -469,9 +469,9 @@ void asignar_mobs(HashMap * escenarios, HashMap * mobs, List * facil, List * med
 
         escenario->Enemigos = list_create();
 
-        if (strcmp(escenario->dificultad, "Facil")) escenario->Enemigos = facil;
-        if (strcmp(escenario->dificultad, "Media")) escenario->Enemigos = media;
-        if (strcmp(escenario->dificultad, "Dificil")) escenario->Enemigos = dificil;
+        if (strcmp(escenario->dificultad, "Facil") == 0) escenario->Enemigos = facil;
+        if (strcmp(escenario->dificultad, "Media") == 0) escenario->Enemigos = media;
+        if (strcmp(escenario->dificultad, "Dificil") == 0) escenario->Enemigos = dificil;
     }
 }
 
@@ -795,13 +795,17 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
     }
 
     while (1) {
-        limpiarPantalla();
+        if (list_first(items_posibles) == NULL){
+            puts("HAS RECOGIDO TODOS LOS OBJETOS");
+            break;
+        }
+
         puts("=== OBJETOS DEL ENEMIGO ===");
 
         int index = 1;
         void *objeto = list_first(items_posibles);
         List *temp = list_create();
-
+        
         while (objeto != NULL) {
             ItemAux *item = (ItemAux *)objeto;
             list_pushBack(temp, item);
@@ -828,8 +832,7 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
         scanf("%d", &opcion);
 
         if (opcion == index + 1 || opcion <= 0) {
-            puts("CANCELANDO O OPCIÓN INVÁLIDA");
-            presioneTeclaParaContinuar();
+            puts("CANCELANDO O OPCION INVALIDA");
             break;
         }
 
@@ -840,7 +843,6 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
                 free(elemento);
             }
             puts("HAS RECOGIDO TODOS LOS OBJETOS");
-            presioneTeclaParaContinuar();
             break;
         } else {
             int actual = 1;
@@ -865,8 +867,7 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
                 list_free(items_posibles); // Libera la lista anterior completamente
                 items_posibles = nueva;    // Usa la nueva lista
 
-                puts("Objeto recogido con éxito.");
-                presioneTeclaParaContinuar();
+                puts("Objeto recogido con exito.");
             }
         }
     }
@@ -1137,7 +1138,7 @@ void seleccionOpcion(Jugador * player)
         switch (op) {
             case '1':
                 //explorarZonas(); //FUNCIÓN PARA EXPLORAR LAS ZONAS
-                movermeDeEscenario(player);
+                jugadorVivo = movermeDeEscenario(player);
                 break;
             case '2':
                 //verEstado(); //FUNCIÓN PARA VER EL INVENTARIO DEL JUGADOR
@@ -1216,13 +1217,17 @@ void lvlup(Jugador *jugador) {
     printf("¡Felicidades! Has subido al nivel %d.\n", jugador->nivel);
 }
 
-void movermeDeEscenario(Jugador *jugador)
+bool movermeDeEscenario(Jugador *jugador)
 {
     char direccion;
     int movimiento = 0;
+    bool jugadorVivo = true;
 
     do {
         limpiarPantalla();
+
+        if (!jugadorVivo) break;
+
         printf("Estás en: %s\n", jugador->actual->nombre);
         printf("¿A dónde deseas moverte?\n");
 
@@ -1244,6 +1249,7 @@ void movermeDeEscenario(Jugador *jugador)
                 if (jugador->actual->arriba) {
                     jugador->actual = jugador->actual->arriba;
                     movimiento = 1;
+                    jugadorVivo = cicloPelea(jugador, jugador->actual->Enemigos);
                 } else {
                     printf("No puedes moverte en esa dirección.\n");
                 }
@@ -1252,6 +1258,7 @@ void movermeDeEscenario(Jugador *jugador)
                 if (jugador->actual->izquierda) {
                     jugador->actual = jugador->actual->izquierda;
                     movimiento = 1;
+                    jugadorVivo = cicloPelea(jugador, jugador->actual->Enemigos);
                 } else {
                     printf("No puedes moverte en esa dirección.\n");
                 }
@@ -1260,6 +1267,7 @@ void movermeDeEscenario(Jugador *jugador)
                 if (jugador->actual->abajo) {
                     jugador->actual = jugador->actual->abajo;
                     movimiento = 1;
+                    jugadorVivo = cicloPelea(jugador, jugador->actual->Enemigos);
                 } else {
                     printf("No puedes moverte en esa dirección.\n");
                 }
@@ -1268,6 +1276,7 @@ void movermeDeEscenario(Jugador *jugador)
                 if (jugador->actual->derecha) {
                     jugador->actual = jugador->actual->derecha;
                     movimiento = 1;
+                    jugadorVivo = cicloPelea(jugador, jugador->actual->Enemigos);
                 } else {
                     printf("No puedes moverte en esa dirección.\n");
                 }
@@ -1283,6 +1292,10 @@ void movermeDeEscenario(Jugador *jugador)
 
     } while (!movimiento);
 
-    printf("Te has movido a: %s\n", jugador->actual->nombre);
+    if (jugadorVivo){
+        ("Te has movido a: %s\n", jugador->actual->nombre);
+        return true;
+    }
+    return false;
     presioneTeclaParaContinuar();
 }
