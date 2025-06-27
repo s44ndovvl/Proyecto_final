@@ -1288,9 +1288,9 @@ void seleccionOpcionAyuda()
 
 void lvlup(Jugador *jugador) {
     jugador->nivel++;
-    jugador->vida += 5; // Incrementa la vida al subir de nivel
+    jugador->max_vida += 5; // Incrementa la vida al subir de nivel
     jugador->ataque += 2; // Incrementa el ataque al subir de nivel
-    jugador->defensa += 1; // Incrementa la defensa al subir de nivel
+    jugador->max_defensa += 1; // Incrementa la defensa al subir de nivel
     printf("¡Felicidades! Has subido al nivel %d.\n", jugador->nivel);
 }
 
