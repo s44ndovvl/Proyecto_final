@@ -843,10 +843,7 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
 
         if (opcion == index + 1 || opcion <= 0) {
             puts("CANCELANDO O OPCION INVALIDA");
-<<<<<<< HEAD
-=======
             //presioneTeclaParaContinuar();
->>>>>>> correciones
             break;
         }
 
@@ -857,10 +854,7 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
                 free(elemento);
             }
             puts("HAS RECOGIDO TODOS LOS OBJETOS");
-<<<<<<< HEAD
-=======
             //presioneTeclaParaContinuar();
->>>>>>> correciones
             break;
         } else {
             int actual = 1;
@@ -886,10 +880,7 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
                 items_posibles = nueva;    // Usa la nueva lista
 
                 puts("Objeto recogido con exito.");
-<<<<<<< HEAD
-=======
                 //presioneTeclaParaContinuar();
->>>>>>> correciones
             }
         }
     }
@@ -1287,16 +1278,11 @@ bool movermeDeEscenario(Jugador *jugador)
 
     do {
         limpiarPantalla();
-<<<<<<< HEAD
-
+        
         if (!jugadorVivo) break;
 
-        printf("Estás en: %s\n", jugador->actual->nombre);
-        printf("¿A dónde deseas moverte?\n");
-=======
         printf("Estas en: %s\n", jugador->actual->nombre);
         printf("A donde deseas moverte?\n");
->>>>>>> correciones
 
         if (jugador->actual->arriba)
             printf("- Arriba (w): %s\n", jugador->actual->arriba->nombre);
@@ -1362,16 +1348,6 @@ bool movermeDeEscenario(Jugador *jugador)
         }
 
     } while (!movimiento);
-<<<<<<< HEAD
-
-    if (jugadorVivo){
-        ("Te has movido a: %s\n", jugador->actual->nombre);
-        return true;
-    }
-    return false;
-    presioneTeclaParaContinuar();
-}
-=======
     limpiarPantalla();
     puts("========================================");
     puts("               FALTA XP");
@@ -1408,4 +1384,3 @@ void verEstado(Jugador *player)
     }
     
 }
->>>>>>> correciones
