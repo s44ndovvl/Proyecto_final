@@ -41,7 +41,27 @@ Este sistema ha sido desarrollado en lenguaje C y puede ejecutarse fácilmente u
 
 ### Funcionando correctamente:
 
-- 
+- Menus pricipal, se muestra correctamente y sus funciones no presentan problemas.
+- Sub-menus de exploracion, combate y ayuda, se muestran sin problemas y sus funciones no muestran problemas. Permiten un flujo normal del programa.
+- Menu de ayuda, deja una explicacion completa de los elementos que conforman el juego.
+- La lectura de escenarios junto con la conexion entre ellos, funciona correctamente.
+- Lectura de mobs, ocurre sin problemas.
+- Se asignan de manera correcta los mobs segun su dificultad a cada escenario. *
+- Se inicializa sin problemas el jugador, al inicializar el juego. Con el nombre seleccionado por el jugador y sus estadisticas y equipaciones iniciales.
+- Funcion de exploracion del mapa funciona correctamente, permite el cambio de escenario y entra en batalla en cada cambio.
+- Se puede revisar el inventario del jugador satisfactoriamente. *
+- Impletacion correcta del flujo del combate por turnos, con sus 3 opciones.
+- Se selecciona aleatoriamente un enemigo de los que estan en el escenario.
+- Ataque del jugador consigue restar la vida a el enemigo y hacer los ajustes correspondientes.
+- Ataque del enemigo consigue restar vida del jugador, manejar las excepciones, como inmunidad y hacer los ajustes sobre la armadura correspondientes.
+- Uso de posiciones y sus bufos, aumentan las estadisticas como deberian.
+- reinicio de estadisticas luego de batalla. *
+- La armadura otorga correctamente defensa y su bufo asociado.
+- Si la armadura se rompe, el jugador pierde la defensa y bufos que esta proporciona de forma correcta.
+- El enemigo suelta alatoriamente objetos al jugador y le otorga una cantidad de experiencia correctamente. 
+- Ocurre bien la subida de estadisticas al llegar a cierta cantidad de experiencia. 
+- Se maneja bien el game over, una vez el jugador pierde.
+- Se implementa correctamente el win, cuando el jugador gana derrotando al boss final. * 
 
 ### Problemas conocidos:
 
