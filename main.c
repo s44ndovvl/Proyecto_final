@@ -622,9 +622,11 @@ Enemigo * seleccionarEnemigo(List * enemigos){
 /**********************************************/
 
 Jugador * createPlayer(char nombre[], HashMap * juego){
+    // Se reserva memoria para el jugador
     Jugador * player = (Jugador *)malloc(sizeof(Jugador));
     if (player == NULL) exit(1);
 
+    //
     strcpy(player->nombre, nombre);
     Pair * inicio = firstMap(juego);
     if (inicio == NULL) {
@@ -682,13 +684,16 @@ Jugador * createPlayer(char nombre[], HashMap * juego){
 /*                   Mostrar                  */
 /**********************************************/
 
+// Funcion para mostrar mobs
 void mostrar_mobs(HashMap *mobs) {
+    // Se carga el primer elemento del mapa de mobs
     Pair *pp = firstMap(mobs);
     if (!pp) {
         printf("No hay monstruos cargados.\n");
         return;
     }
 
+    // Se inicia un bucle para mostrar los mobs y sus estadisticas
     printf("=== Lista de Monstruos ===\n");
     for (; pp; pp = nextMap(mobs)) {
         Enemigo *e = (Enemigo*)pp->value;
@@ -743,7 +748,9 @@ void mostrar_mobs(HashMap *mobs) {
     }
 }
 
+// Funcion para mostrar el mapa
 void mostrarMap(HashMap * juego){
+    // Bucle para imprimir cada escenario del mapa
     for (Pair *pp = firstMap(juego); pp; pp = nextMap(juego)) {
         Escenarios *e = (Escenarios*)pp->value;
         printf("ID: %s, Nombre: %s, Leyenda: %s, Dificultad: %s\n", e->id, e->nombre, e->leyenda, e->dificultad);
@@ -755,12 +762,14 @@ void mostrarMap(HashMap * juego){
 /*               Ciclo de Pelea               */
 /**********************************************/
 
+// Funcion para reiniciar las estadisticas del jugador
 void reiniciarEstasBase(Jugador * player){
     // Reinicia las estadisticas base del jugador
     player->defensa = player->max_defensa;
     player->ataque = player->max_ataque;
 }
 
+// Funcion para guardar item
 void guardar_item(Inventario * inv, void * item, int tipo){
     if (!item) return;
 
@@ -819,6 +828,7 @@ void guardar_item(Inventario * inv, void * item, int tipo){
     }
 }
 
+// Funcion para recoger items del enemigo
 void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
     limpiarPantalla();
 
@@ -971,14 +981,18 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
     }
 }
 
+// Funcion para usar pociones
 bool usarPociones(Jugador * player){
     limpiarPantalla();
+
+    // Mostrar un mensaje en caso de no tener pociones
     if (list_size(player->inventario.pocion) == 0){
         puts("No tienes pociones en el inventario.");
         return true;
     }
-    puts("=== POCIONES DISPONIBLES ===");
 
+    // Mostrar las pociones disponibles
+    puts("=== POCIONES DISPONIBLES ===");
     int index = 1;
     Pocion *p_display = list_first(player->inventario.pocion);
     while (p_display != NULL) {
@@ -986,13 +1000,15 @@ bool usarPociones(Jugador * player){
         p_display = list_next(player->inventario.pocion);
         index++;
     }
-    
     printf("%d) Cancelar\n", index);
+
+    // Seleccionar la pocion a utillizar
     printf("Seleccione la opcion a usar: ");
     int opcion;
     scanf("%d", &opcion);
     while (getchar() != '\n');
 
+    // Mostrar mensaje en caso de no usar ninguna pocion
     if (opcion <= 0 || opcion > list_size(player->inventario.pocion)) {
         puts("No se uso ninguna pocion.");
         presioneTeclaParaContinuar();
@@ -1010,35 +1026,48 @@ bool usarPociones(Jugador * player){
         return false;
     }
 
+    // Mostrar la pocion usada
     printf("Usaste la pocion: %s\n", seleccionada->nombre);
+
+    // Mostrar la vida actualizada despues de usar la pocion, si corresponde
     if (strcmp(seleccionada->efecto, "Vida") == 0){
         player->vida += seleccionada->valor;
         if (player->vida > player->max_vida) player->vida = player->max_vida;
         printf("Tu vida actual es: %d", player->vida);
     }
+
+    // Mostrar un mensaje mostrand que el jugador tiene inmunidad, si corresponde
     else if (strcmp(seleccionada->efecto, "Inmunidad") == 0){
         player->inmunidad = seleccionada->valor;
         puts("¡Ahora eres inmune temporalmente!");
     }
+
+    // Mostar un mensaje de la defensa actualizada, si corresponde
     else if (strcmp(seleccionada->efecto, "Escudo") == 0){
         player->defensa += seleccionada->valor;
         printf("Tu defensa aumento a: %d\n", player->defensa);
     }
+
+    // Mostrar un mensaje de la estamina actualizada, si corresponde
     else if (strcmp(seleccionada->efecto, "Estamina") == 0){
         player->estamina += seleccionada->valor;
         if (player->estamina > player->max_estamina) player->estamina = player->max_estamina;
         printf("Tu estamina actual es: %d\n", player->estamina);
     }
+
+    // Mostrar un mensaje del ataque actualizado, si corresponde
     else if (strcmp(seleccionada->efecto, "Ataque") == 0){
         player->ataque += seleccionada->valor;
         printf("Tu ataque actual es: %d\n", player->ataque);
     }
 
+    // Se quita de la lista de pociones la pocion utilizada
     Pocion * pocion_a_liberar = (Pocion *)list_popCurrent(player->inventario.pocion);
     free(pocion_a_liberar); // Libera la memoria de la poción usada
 
     presioneTeclaParaContinuar();
 
+    // Mostrar un mensaje en caso de quedarse sin pociones
     if(list_size(player->inventario.pocion) == 0){
         puts("Te has quedado sin pociones");
         presioneTeclaParaContinuar();
@@ -1047,18 +1076,21 @@ bool usarPociones(Jugador * player){
     return false;
 }
 
+// Funcion para aplicar bufo al jugador
 void aplicarBufo(Jugador * player, const char *bufo, int valor){
+
     if (strcmp(bufo, "Escudo extra") == 0) {
-        player->defensa_total += valor;
+        player->defensa_total += valor; // Se agrega defensa
     } else if (strcmp(bufo, "Estamina") == 0) {
-        player->estamina_total += valor;
+        player->estamina_total += valor; // Se agrega estamina
     } else if (strcmp(bufo, "Aumento de vida") == 0) {
-        player->vida_total += valor;
+        player->vida_total += valor; // Se agrega vida
     } else if (strcmp(bufo, "Ataque") == 0) {
-        player->ataque_total += valor;
+        player->ataque_total += valor; // Se agrega ataque
     }
 }
 
+// Funcion para calcular las estadisticas del jugador
 void calcularEstatsT(Jugador * player){
     player->ataque_total = player->ataque;
     if (strcmp(player->inventario.armas.nombre, "Sin arma") != 0){
@@ -1088,20 +1120,26 @@ void calcularEstatsT(Jugador * player){
     }
 }
 
+// Funcion para reiniciar el arma a cero
 void reiniciarArma(Arma * arma){
     strcpy(arma->nombre, "Sin arma");
     arma->ataque = 0;
     arma->durabilidad = 0;
 }
 
+// Funcion para determinar ataque
 bool realizarAtaque(Jugador *player, Enemigo *enemigo, bool especial) {
+    // Aqui se determina si el ataque es uno normal o es especial
     int multiplicador = especial ? 2 : 1;
     int costo_estamina = especial ? -5 : 1; // -5 para restar 5 en especial, 1 para sumar 1 en normal
 
+    // Se calcula el daño y se le resta al enemigo
     int dano = multiplicador * ((player->ataque_total * player->ataque_total) / (player->ataque_total + enemigo->defensa));
     enemigo->vida -= dano;
     
+    // Se resta la estamina utilizada
     player->estamina += costo_estamina;
+
 
     if (strcmp(player->inventario.armas.nombre, "Sin arma") != 0){
         player->inventario.armas.durabilidad -= 1;
@@ -1111,30 +1149,40 @@ bool realizarAtaque(Jugador *player, Enemigo *enemigo, bool especial) {
             presioneTeclaParaContinuar();
         }
     }
-    if (enemigo->vida <= 0) {
-        puts("El enemigo ha sido derrotado!");
-        player->experiencia+= enemigo->exp_dada;
 
+    if (enemigo->vida <= 0) {
+        // Se muestra un mensaje al derrotar al enemigo
+        puts("El enemigo ha sido derrotado!");
+
+        // Se calcula la experiencia y el nivel
+        player->experiencia+= enemigo->exp_dada;
         while(player->experiencia >= 100){
             player->experiencia -= 100;
             lvlup(player);
         }
 
+        // Si el enemigo es el creeper, este explotara al morir causando daño y mostrando un mensaje por pantalla
         if(strcmp(enemigo->nombre, "Creeper") == 0)
         {
             player->vida -= 10;
             printf("El %s ha explotado!!. te ha quitado 10 de vida :(\n", enemigo->nombre);
             presioneTeclaParaContinuar();
         } 
+
+        // Si se derrota al boss se procede a llamar a la funcion victoria para terminar el juego
         if (strcmp(enemigo->dificultad, "Boss") == 0) {
         victoria();
         }
+
+        // Se llama a la funcion recoger_items_enemigo() para ver que elementos solto el mob y caules
+        // recogeras el jugador
         recoger_items_enemigo(player, enemigo);
         return false;
     }
     return true;
 }
 
+// Funcion para reiniciar la armadura a cero
 void reiniciarArmadura(Armadura * vacia){
     printf("Tu %s %s se ha roto\n", vacia->tipo, vacia->nombre);
     presioneTeclaParaContinuar();
@@ -1146,6 +1194,7 @@ void reiniciarArmadura(Armadura * vacia){
     vacia->valor = 0;
 }
 
+// Funcion para calcular la perdida de durabillidad de las armas y armaduras
 void perdidaDurabilidad(Armadura * aux){
     if (strcmp(aux->nombre, "Sin armadura") != 0){
         aux->durabilidad -= 1;
@@ -1153,36 +1202,45 @@ void perdidaDurabilidad(Armadura * aux){
     }
 }
 
+// Funcion para generar el ataque enemigo
 void ataqueEnemigo(Jugador * player, Enemigo * enemigo){
-    
+    // Si se usa la inmunidad temporal el enemigo no puede atacar
     if(player->inmunidad) {
         puts("¡El enemigo no puede dañarte, estas inmune!");
         (player->inmunidad)--; // Desactiva la inmunidad después de un ataque
         return;
     }
 
+    // Se calcula el daño del mob y se descuenta de la vida del jugador
     int dano = (int)((enemigo->ataque * enemigo->ataque) / (enemigo->ataque + player->defensa_total));
     player->vida -= dano;
     
+    // Se calcula la perdida de durabilidad de los items del jugador
     perdidaDurabilidad(&player->inventario.casco);
     perdidaDurabilidad(&player->inventario.pechera);
     perdidaDurabilidad(&player->inventario.guantes);
     perdidaDurabilidad(&player->inventario.pantalones);
     perdidaDurabilidad(&player->inventario.botas);
 
+    // Mostrar por pantalla el daño recibido por el mob
     printf("El enemigo %s te ha atacado y te ha hecho %d de daño.\n", enemigo->nombre, dano);
+
+    // Mostrar mensaje en caso de ser derrotado por el mob
     if (player->vida <= 0) {
         puts("Has sido derrotado por el enemigo.");
     }
 }
 
+// Funcion para determinar si el jugador huye o no
 bool huida(Jugador *player, Enemigo *enemigo)
 {
+    // Mostrar mensaje de que no se puede huir de la batalla contra el boss
     if(strcmp(enemigo->dificultad, "Boss") == 0) {
         puts("No puedes huir de un Boss!");
         return false; // No se puede huir de un Boss
     }
-    int prob_base = 30;
+
+    int prob_base = 30; // Probabilidad base de escapar de un combate
 
     // Modificadores según estado del jugador y dificultad del enemigo
     int mod_estamina = player->estamina - 10; // +1% por cada punto sobre 10
@@ -1193,6 +1251,7 @@ bool huida(Jugador *player, Enemigo *enemigo)
     else if (strcmp(enemigo->dificultad, "Media") == 0) mod_dificultad = 10;
     else if (strcmp(enemigo->dificultad, "Facil") == 0) mod_dificultad = -5;
 
+    // Se calcula la probabilidad final
     int prob_final = prob_base + mod_estamina / 2 + mod_vida / 2 + mod_dificultad;
 
     // Limitar la probabilidad entre 5% y 90%
@@ -1200,16 +1259,21 @@ bool huida(Jugador *player, Enemigo *enemigo)
     if (prob_final > 100) prob_final = 100;
 
     int index = rand() % 100;
+
+    // Si el jugador logra huir se muestrar un mensaje de escape
     if (index < prob_final) {
         puts("¡Has logrado huir de la pelea!");
         player->estamina -= 5; // El jugador pierde estamina al intentar huir
         if (player->estamina < 0) player->estamina = 0; // Asegura que la estamina no sea negativa
         return true; // El jugador ha huido exitosamente
     }
+
+    // Mostrar mensaje en caso de no poder huir de la pelea
     puts("No has logrado huir de la pelea, el enemigo te ataca!");
     return false;
 }
 
+// Funcion para crear el ciclo de pelea
 bool cicloPelea(Jugador * player, List * enemigos)
 {
     Enemigo * enemigo = seleccionarEnemigo(enemigos); // Selecciona un enemigo de la lista proporcionada
@@ -1235,6 +1299,7 @@ bool cicloPelea(Jugador * player, List * enemigos)
         menuOpcionesPelea(); // Muestra el menú de opciones de pelea
         bool repetirAccion = false; // Variable para controlar si se repite la acción
         
+        // Se le pide una opcion al usuario
         char opcion;
         printf("INGRESE SU OPCION: ");
         scanf(" %c", &opcion);
@@ -1264,9 +1329,11 @@ bool cicloPelea(Jugador * player, List * enemigos)
         if(EnemigoVivo) ataqueEnemigo(player, enemigo); // El enemigo ataca al jugador
     }
     
+
     reiniciarEstasBase(player);
     calcularEstatsT(player);
 
+    // Mostar un mensaje al perder y cambiar el estado a muerto
     if (player->vida <= 0) {
         puts("El jugador ha sido derrotado!");
         return false; // El jugador ha muerto
@@ -1313,6 +1380,7 @@ void seleccionOpcion(Jugador * player)
     } // El bucle continuará mientras el jugador esté activo
 }
 
+// Funcion para seleccionar una opcion en el menu de ayuda
 void seleccionOpcionAyuda()
 {
     char op;
@@ -1327,7 +1395,7 @@ void seleccionOpcionAyuda()
 
         //Se realizan las acciones según la opción seleccionada
         switch (op) {
-            case '1':
+            case '1': // SOBRE LOS MOVIMIENTO
                 limpiarPantalla();
 
                 puts("========================================");
@@ -1349,7 +1417,7 @@ void seleccionOpcionAyuda()
                     esperar(1);         // Espera 1 segundos
                 }
                 break;
-            case '2':
+            case '2': // SOBRE LOS ENEMIGOS
                 limpiarPantalla();
                 puts("========================================");
                 puts("                ENEMIGOS                ");
@@ -1372,7 +1440,7 @@ void seleccionOpcionAyuda()
                     esperar(1);         // Espera 1 segundos
                 }
                 break;
-            case '3':
+            case '3': // SOBRE EL EQUIPAMENTO
                 limpiarPantalla();
                 puts("========================================");
                 puts("                EQUIPAMENTO             ");
@@ -1393,11 +1461,11 @@ void seleccionOpcionAyuda()
                     esperar(1);         // Espera 1 segundos
                 }
                 break;
-            case '4':
+            case '4': // Volver al menu principal
                 limpiarPantalla();
                 printf("VOLVIENDO AL MENU PRINCIPAL.\n");
                 return;
-            default:
+            default: // Opcion no valida
                 limpiarPantalla();
                 printf("OPCION NO VALIDA.\n");
                 break;
@@ -1406,14 +1474,16 @@ void seleccionOpcionAyuda()
     } // El bucle continuará mientras el jugador esté activo
 }
 
+// Funcion para hacer la subida de nivel
 void lvlup(Jugador *jugador) {
-    jugador->nivel++;
+    jugador->nivel++; // Sube un nivel
     jugador->max_vida += 5; // Incrementa la vida al subir de nivel
     jugador->max_ataque += 2; // Incrementa el ataque al subir de nivel
     jugador->max_defensa += 1; // Incrementa la defensa al subir de nivel
-    printf("¡Felicidades! Has subido al nivel %d.\n", jugador->nivel);
+    printf("¡Felicidades! Has subido al nivel %d.\n", jugador->nivel); // Mensaje al subir de nivel
 }
 
+// Funcion para hacer el movimiento entre escenarios
 bool movermeDeEscenario(Jugador *jugador)
 {
     char direccion;
@@ -1422,12 +1492,12 @@ bool movermeDeEscenario(Jugador *jugador)
 
     do {
         limpiarPantalla();
-        
+        // Si el jugador esta muerto no se puede hacer movimiento por el mapa
         if (!jugadorVivo) break;
 
+        // Mostrar mensaje de donde esta el jugador y hacia a donde sepuede mover
         printf("Estas en: %s\n", jugador->actual->nombre);
         printf("A donde deseas moverte?\n");
-
         if (jugador->actual->arriba)
             printf("- Arriba (w): %s\n", jugador->actual->arriba->nombre);
         if (jugador->actual->abajo)
@@ -1436,54 +1506,61 @@ bool movermeDeEscenario(Jugador *jugador)
             printf("- Izquierda (a): %s\n", jugador->actual->izquierda->nombre);
         if (jugador->actual->derecha)
             printf("- Derecha (d): %s\n", jugador->actual->derecha->nombre);
-
         printf("\nSolo se muestran las direcciones disponibles.\n");
+
+        // Ingresar la opcion de donde el usuario quiere moverse
         printf("Ingrese direccion (w/a/s/d): ");
         scanf(" %c", &direccion);
         while (getchar() != '\n');
 
+        // Segun la opcion selecionada se realizael movimieto
         switch (direccion) {
             case 'w':
             case 'W':
+                // Hacia arriba
                 if (jugador->actual->arriba) {
                     jugador->actual = jugador->actual->arriba;
                     movimiento = 1;
                     jugadorVivo = cicloPelea(jugador, jugador->actual->Enemigos);
                 } else {
-                    printf("No puedes moverte en esa direccion.\n");
+                    printf("No puedes moverte en esa direccion.\n"); // Mensaje en caso de que realizar este movimiento no este disponible
                 }
                 break;
             case 'a':
             case 'A':
+                // Hacia la izquierda
                 if (jugador->actual->izquierda) {
                     jugador->actual = jugador->actual->izquierda;
                     movimiento = 1;
                     jugadorVivo = cicloPelea(jugador, jugador->actual->Enemigos);
                 } else {
-                    printf("No puedes moverte en esa direccion.\n");
+                    printf("No puedes moverte en esa direccion.\n"); // Mensaje en caso de que realizar este movimiento no este disponible
                 }
                 break;
             case 's':
             case 'S':
+                // Hacia abajo
                 if (jugador->actual->abajo) {
                     jugador->actual = jugador->actual->abajo;
                     movimiento = 1;
                     jugadorVivo = cicloPelea(jugador, jugador->actual->Enemigos);
                 } else {
-                    printf("No puedes moverte en esa direccion.\n");
+                    printf("No puedes moverte en esa direccion.\n"); // Mensaje en caso de que realizar este movimiento no este disponible
                 }
                 break;
             case 'd':
             case 'D':
+                // Hacia la derecha
                 if (jugador->actual->derecha) {
                     jugador->actual = jugador->actual->derecha;
                     movimiento = 1;
                     jugadorVivo = cicloPelea(jugador, jugador->actual->Enemigos);
                 } else {
-                    printf("No puedes moverte en esa direccion.\n");
+                    printf("No puedes moverte en esa direccion.\n"); // Mensaje en caso de que realizar este movimiento no este disponible
                 }
                 break;
             default:
+                // Mensaje en caso de que se ingrese una direccion no disponible
                 printf("Direccion invalida. Intenta nuevamente.\n");
                 break;
         }
@@ -1496,6 +1573,7 @@ bool movermeDeEscenario(Jugador *jugador)
 
     if (!jugadorVivo) return false;
 
+    // Mostrar hacia a donde se movio el jugador
     limpiarPantalla();
     puts("========================================");
     puts("               FALTA XP");
@@ -1511,6 +1589,8 @@ bool movermeDeEscenario(Jugador *jugador)
 void verEstado(Jugador *player)
 {
     int n = 0;
+
+    // Se muestran las estadisticas del jugador
     limpiarPantalla();
     puts("========================================");
     puts("           ESTADO DEL JUGADOR           ");
@@ -1521,6 +1601,8 @@ void verEstado(Jugador *player)
     printf("Te encuentras en: %s\n", player->actual->nombre);
     presioneTeclaParaContinuar();
     limpiarPantalla();
+
+    // Se muestran el inventario del jugador
     if(strcmp(player->inventario.armas.nombre, "Sin arma") == 1) printf("[ARMA]: %s\n\n", player->inventario.armas.nombre);
     if(strcmp(player->inventario.casco.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Casco %s\n", player->inventario.casco.nombre);
     if(strcmp(player->inventario.pechera.nombre, "Sin armadura") == 1) printf("[ARMADURA]: Pechera %s\n", player->inventario.pechera.nombre);
@@ -1557,6 +1639,8 @@ void victoria()
     presioneTeclaParaContinuar();
     mostrarCreditos();
     presioneTeclaParaContinuar();
+
+    // Se libera la memoria del juego
     liberarMemoria(g_player, g_juego, g_mobs, g_facil, g_medio, g_dificil);
     exit(0);
     
