@@ -46,10 +46,10 @@ Este sistema ha sido desarrollado en lenguaje C y puede ejecutarse fácilmente u
 - Menu de ayuda, deja una explicacion completa de los elementos que conforman el juego.
 - La lectura de escenarios junto con la conexion entre ellos, funciona correctamente.
 - Lectura de mobs, ocurre sin problemas.
-- Se asignan de manera correcta los mobs segun su dificultad a cada escenario. *
+- Se asignan de manera correcta los mobs segun su dificultad a cada escenario. 
 - Se inicializa sin problemas el jugador, al inicializar el juego. Con el nombre seleccionado por el jugador y sus estadisticas y equipaciones iniciales.
 - Funcion de exploracion del mapa funciona correctamente, permite el cambio de escenario y entra en batalla en cada cambio.
-- Se puede revisar el inventario del jugador satisfactoriamente. *
+- Se puede revisar el inventario y estado del jugador satisfactoriamente. 
 - Impletacion correcta del flujo del combate por turnos, con sus 3 opciones.
 - Se selecciona aleatoriamente un enemigo de los que estan en el escenario.
 - Ataque del jugador consigue restar la vida a el enemigo y hacer los ajustes correspondientes.
@@ -61,7 +61,8 @@ Este sistema ha sido desarrollado en lenguaje C y puede ejecutarse fácilmente u
 - El enemigo suelta alatoriamente objetos al jugador y le otorga una cantidad de experiencia correctamente. 
 - Ocurre bien la subida de estadisticas al llegar a cierta cantidad de experiencia. 
 - Se maneja bien el game over, una vez el jugador pierde.
-- Se implementa correctamente el win, cuando el jugador gana derrotando al boss final. *
+- Se implementa correctamente el win, cuando el jugador gana derrotando al boss final. 
+- Se libera memoria de forma conciente.
 
 ### Problemas conocidos:
 
@@ -94,18 +95,53 @@ Este sistema ha sido desarrollado en lenguaje C y puede ejecutarse fácilmente u
 # Contribuciones 
 
 ### Joaquin Contreras:
+- Creo funcion de movimiento por sala.
+- Balanceo de dificultad.
+- Implemento csv inicial del mapa y ajusto csv enemigo.
+- Creo el liberar memoria y el win.
+- Funcion subir de nivel.
+- Leer mobs.
+- Correccion de funciones generales.
 
-- **Auto-evaluación**: 
+- **Auto-evaluación**: Excelente y optima.
 
 ### Eduardo Sandoval:
+- Leer escenarios y crear conexiones.
+- Contribucion al ciclo de pelea.
+- Creo el ataque enemigo.
+- Creo funcion huida.
+- Ajuste al leer mob.
+- Creo estructuras.
+- Hizo aplicar estadisticas durante pelea.
+- Creacion y escritura del readme.
 
-- **Auto-evaluación**: 
+- **Auto-evaluación**: Excelente y optima.
 
 ### Branron Cáceres:
+- Creo recolectar objetos y guardar objeto.
+- Creo seleccion enemigo.
+- Creo asignar enemigo a mapa.
+- Creo el crear player.
+- creo el usar posiciones.
+- Aplicar bufo.
+- creo Realizar ataque del jugador.
+- Creo reiniciar armadura.
+- Hizo el ataque especial.
+- gran contribucion en revision de errores.
+- Orden general de modularizacion.
 
-- **Auto-evaluación**: 
+- **Auto-evaluación**: Excelente y optima.
 
 ### Josue Huaiquil:
+- Implemento menus.
+- Implemento switches del juego.
+- Implemento la ayuda y los creditos.
+- Creo el ver estado jugador.
+- Hizo gran aporte en la funcion de ramas.
+- Gran aporte en la correccion de errores.
+- Creo los mostrar map y mob, para hacer revision de las lecturas.
+- Implemento la funcion esperar dentro de los extra.
+- Comentacion y documentacion del codigo.
 
-- **Auto-evaluación**: 
+- **Auto-evaluación**: Excelente y optima
 
