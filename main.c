@@ -784,6 +784,7 @@ void guardar_item(Inventario * inv, void * item, int tipo){
     if (tipo == 0){
         Arma * arma = (Arma *)item;
         if (arma->ataque > 0 && arma->durabilidad > 0){
+            printf("\n[ARMA]\n");
             printf("Arma actual: %s (Ataque: %d, Durabilidad: %d)\n", inv->armas.nombre, inv->armas.ataque, inv->armas.durabilidad);
             printf("Nueva arma:  %s (Ataque: %d, Durabilidad: %d)\n", arma->nombre, arma->ataque, arma->durabilidad);
             printf("Deseas reemplazar tu arma actual? (1 = SI, 2 = NO): ");
@@ -938,9 +939,9 @@ void recoger_items_enemigo(Jugador *player, Enemigo *enemigo) {
         scanf("%1d", &opcion);
         while (getchar() != '\n');
 
+        limpiarPantalla();
         if (opcion == index + 1 || opcion <= 0) {
             puts("CANCELANDO O OPCION INVALIDA");
-            presioneTeclaParaContinuar();
             break;
         }
 
